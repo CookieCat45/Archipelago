@@ -50,9 +50,11 @@ class RCONClient:
             return True
         return False
 
-    def command(self, cmd) -> str:
+    def command(self, cmd, args="") -> str:
         """Sends a command to the RCON server and processes the response."""
         if self.socket:
+            if args != "":
+                cmd += " " + args
             packet = self._create_packet(self.SERVERDATA_EXECCOMMAND, cmd)
             self.socket.send(packet)
             response = self._receive_response()

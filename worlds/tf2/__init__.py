@@ -15,9 +15,9 @@ def launch_client():
     launch_subprocess(launch, name="Client")
 
 components.append(Component("Team Fortress 2 Client", "TF2Client", func=launch_client,
-                            component_type=Type.CLIENT))
+                            component_type=Type.CLIENT, icon='tf2'))
 
-icon_paths['tf2'] = local_path('data', 'tf2.png')
+icon_paths['tf2'] = f"ap:{__name__}/icons/tf2.png"
 
 class TF2World(World):
     """

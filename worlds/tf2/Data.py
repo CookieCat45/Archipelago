@@ -109,7 +109,7 @@ weapon_kill_names = [
         "the_winger": "Winger",
         "guillotine": "Flying Guillotine",
 
-        "bat_wood": "Sandman",
+        "sandman": "Sandman",
         "atomizer": "Atomizer",
         "boston_basher": "Boston Basher",
         "scout_sword": "Boston Basher",
@@ -185,6 +185,7 @@ weapon_kill_names = [
     {
         "iron_bomber": "Iron Bomber",
         "loose_cannon": "Loose Cannon",
+        "loose_cannon_impact": "Loose Cannon",
         "loch_n_load": "Loch-n-Load",
 
         "sticky_resistance": "Scottish Resistance",
