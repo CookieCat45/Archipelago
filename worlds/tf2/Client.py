@@ -2,8 +2,7 @@ import asyncio
 import Utils
 import os
 from typing import Dict, Any
-from rcon.source import Client
-from rcon import WrongPassword
+from .Rcon import RCONClient
 import socket
 from random import randint
 from copy import deepcopy
@@ -18,7 +17,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 
-DEBUG = False
+DEBUG = True
 
 class TF2JSONToTextParser(JSONtoTextParser):
     def _handle_color(self, node: JSONMessagePart):
@@ -67,7 +66,7 @@ class TF2CommandProcessor(ClientCommandProcessor):
         def _cmd_tf2_sendcmd(self, text: str):
             if isinstance(self.ctx, TF2Context):
                 if self.ctx.rcon is not None:
-                    self.ctx.rcon.run(text)
+                    self.ctx.rcon.command(text)
 
 
 class TF2Context(CommonContext):
@@ -479,7 +478,7 @@ async def rcon_loop(ctx: TF2Context):
     while not ctx.exit_event.is_set():
         if ctx.rcon_password != "":
             try:
-                with Client(socket.gethostbyname(socket.gethostname()), 27015, passwd=ctx.rcon_password) as ctx.rcon:
+                with RCONClient(socket.gethostbyname(socket.gethostname()), 27015, password=ctx.rcon_password) as ctx.rcon:
                     logger.info("Connected to TF2 RCON!")
                     # clean up the old file if it exists
                     condump = ctx.get_condump_file()
@@ -489,21 +488,20 @@ async def rcon_loop(ctx: TF2Context):
 
                     while True:
                         if ctx.steam_name == "":
-                            name = ctx.rcon.run("name")
+                            name = ctx.rcon.command("name")
                             name = name.replace("\"name\" = ", "")
                             index = name.find(" ( def. \"unnamed\" )")
                             name = name[1:index-1]
                             ctx.steam_name = name
                             logger.info(f"Your name is: {ctx.steam_name}")
-
                         if ctx.current_class == TFClass.UNKNOWN:
                             # this forces class configs to execute, so we can see what class the player is playing
                             # after a reconnect
-                            ctx.rcon.run("record ap_dummy; stop")
+                            ctx.rcon.command("record ap_dummy; stop")
 
                         if len(ctx.cmd_queue) > 0:
                             for c in ctx.cmd_queue:
-                                ctx.rcon.run(c.cmd, c.args)
+                                ctx.rcon.command(c.cmd, c.args)
                             ctx.cmd_queue.clear()
 
                         condump = ctx.get_condump_file()
@@ -515,11 +513,6 @@ async def rcon_loop(ctx: TF2Context):
                                 ctx.on_console_line(line)
 
                         await asyncio.sleep(0.1)
-            except WrongPassword:
-                logger.info("TF2 RCON Connection failed (Wrong RCON Password - "
-                            "Check the password in-game using the rcon_password console command, "
-                            "and set it to something if it's blank)")
-                ctx.cleanup()
             except ConnectionRefusedError:
                 logger.info("TF2 RCON connection was refused."
                             "Make sure that the game is running with the -usercon launch option.")
