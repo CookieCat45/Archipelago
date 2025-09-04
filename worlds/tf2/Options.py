@@ -61,6 +61,8 @@ class BannedWeapons(OptionList):
         "Detonator",
         "Homewrecker",
         "Sharpened Volcano Fragment",
+        "Reflect",
+        "Hot Hand",
 
         "Chargin' Targe",
         "Splendid Screen",
@@ -73,6 +75,8 @@ class BannedWeapons(OptionList):
         "Rescue Ranger",
         "Short Circuit",
         "Jag",
+        "Eureka Effect",
+        "Southern Hospitality",
 
         "Overdose",
         "Amputator",
@@ -113,7 +117,7 @@ class MeleeWeaponRules(Choice):
     option_allow_knives_only = 2
     option_allow_swords_only = 3
     option_allow_knives_and_swords_only = 4
-    default = 0
+    default = 4
 
 class TrapChance(Range):
     """The chance for a junk item in the pool to be replaced by a trap."""
