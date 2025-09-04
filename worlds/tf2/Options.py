@@ -50,6 +50,7 @@ class BannedWeapons(OptionList):
         "Sun-on-a-Stick",
         "Candy Cane",
         "Boston Basher",
+        "Sandman",
 
         "Mantreads",
         "Righteous Bison",
