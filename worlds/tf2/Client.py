@@ -17,7 +17,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 
-DEBUG = True
+DEBUG = False
 
 class TF2JSONToTextParser(JSONtoTextParser):
     def _handle_color(self, node: JSONMessagePart):
