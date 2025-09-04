@@ -128,12 +128,16 @@ class TF2World(World):
                 if weapon in self.available_weapons or weapon in banned_weps:
                     continue
 
-                if not allow_all_melee:
-                    if self.options.MeleeWeaponRules == MeleeWeaponRules.option_disallow_all and weapon in melee_weapons:
+                if not allow_all_melee and weapon in melee_weapons:
+                    if self.options.MeleeWeaponRules == MeleeWeaponRules.option_disallow_all:
                         continue
-
-                    if weapon in knives and not allow_knives or weapon in swords and not allow_swords:
+                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_only and weapon not in knives:
                         continue
+                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_swords_only and weapon not in swords:
+                        continue
+                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_and_swords_only:
+                        if weapon not in knives and weapon not in swords:
+                            continue
 
                 self.available_weapons.append(weapon)
                 count += 1
