@@ -3,11 +3,10 @@ from worlds.AutoWorld import World
 from typing import List, Mapping, Any, Dict, TextIO
 from BaseClasses import Item, MultiWorld
 from .Options import TF2Options, ol_to_list, MeleeWeaponRules
-from .Items import get_item_id, create_item, create_itempool, get_item_ids
+from .Items import get_item_id, create_item, create_itempool, get_item_ids, init_available_weapons
 from .Regions import create_tf2_objectives, get_location_ids
 from .Data import weapon_kill_names, TFClass, weapon_to_class, knives, swords, melee_weapons
 from worlds.LauncherComponents import Component, components, icon_paths, launch_subprocess, Type
-from Utils import local_path
 from math import floor
 
 def launch_client():
@@ -66,7 +65,7 @@ class TF2World(World):
 
         self.starting_class = starting_class
         self.multiworld.push_precollected(self.create_item(starting_class.tostr()))
-        self.init_available_weapons()
+        init_available_weapons(self)
 
     def create_regions(self):
         self.total_locations = create_tf2_objectives(self)
@@ -97,79 +96,3 @@ class TF2World(World):
 
     def get_required_contract_points(self) -> int:
         return floor(self.total_objectives * (self.options.ContractPointRequirement/100))
-
-    def init_available_weapons(self):
-        weapon_count = self.random.randint(
-            min(self.options.MinWeaponsInPool.value, self.options.MaxWeaponsInPool.value),
-            max(self.options.MaxWeaponsInPool.value, self.options.MinWeaponsInPool.value))
-
-        class_list = ol_to_list(self.options.AllowedClasses)
-        max_per_class = weapon_count
-        per_class_counts = {}
-        if self.options.EvenWeaponCounts:
-            max_per_class = weapon_count / len(class_list)
-
-        banned_weps = ol_to_list(self.options.BannedWeapons)
-        for class_name in self.options.AllowedClasses:
-            class_type = TFClass[class_name.upper()]
-            if class_type == TFClass.UNKNOWN:
-                raise Exception(f"Unknown class name \"{class_name}\" in AllowedClasses list")
-
-            count = 0
-            allow_all_melee = (self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_all)
-            allow_knives = (self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_only
-                            or self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_and_swords_only)
-            allow_swords = (self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_swords_only
-                            or self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_and_swords_only)
-
-            weapon_list = list(weapon_kill_names[class_type].values())
-            self.random.shuffle(weapon_list)
-            for weapon in weapon_list:
-                if weapon in self.available_weapons or weapon in banned_weps:
-                    continue
-
-                if not allow_all_melee and weapon in melee_weapons:
-                    if self.options.MeleeWeaponRules == MeleeWeaponRules.option_disallow_all:
-                        continue
-                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_only and weapon not in knives:
-                        continue
-                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_swords_only and weapon not in swords:
-                        continue
-                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_and_swords_only:
-                        if weapon not in knives and weapon not in swords:
-                            continue
-
-                self.available_weapons.append(weapon)
-                count += 1
-                per_class_counts[class_type] = count
-                if count >= max_per_class:
-                    break
-
-        # shuffle and truncate
-        self.random.shuffle(self.available_weapons)
-        if self.options.EvenWeaponCounts:
-            index = 0
-            values_list = list(per_class_counts.values())
-            average = sum(values_list) / len(values_list)
-            self.random.shuffle(class_list)
-            while len(per_class_counts) > 0:
-                current_class = TFClass[class_list[index].upper()]
-                if current_class not in per_class_counts.keys():
-                    index += 1
-                    if index >= len(class_list):
-                        index = 0
-                    continue
-                elif per_class_counts[current_class] <= average:
-                    del per_class_counts[current_class]
-                    continue
-
-                for wep in self.available_weapons:
-                    if weapon_to_class.get(wep) == current_class:
-                        self.available_weapons.remove(wep)
-                        per_class_counts[current_class] -= 1
-                        index += 1
-                        if index >= len(class_list):
-                            index = 0
-                        break
-        elif len(self.available_weapons) > weapon_count:
-            del self.available_weapons[weapon_count:]

@@ -335,6 +335,29 @@ melee_weapons = [
     "Sharpened Volcano Fragment",
     "Neon Annihilator",
     "Hot Hand",
+
+    "Ullapool Caber",
+
+    "Gloves of Running Urgently",
+    "Killing Gloves of Boxing",
+    "Warrior's Spirit",
+    "Fists of Steel",
+    "Eviction Notice",
+    "Holiday Punch",
+
+    "Southern Hospitality",
+    "Jag",
+    "Gunslinger",
+    "Eureka Effect",
+
+    "Ubersaw",
+    "Vita-Saw",
+    "Solemn Vow",
+    "Amputator",
+
+    "Tribalman's Shiv",
+    "Bushwacka",
+    "Shahanshah",
 ]
 
 trap_ids = {

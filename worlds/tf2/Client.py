@@ -221,7 +221,11 @@ class TF2Context(CommonContext):
                 sound_played_expert = False
                 if self.current_class != TFClass.UNKNOWN:
                     class_name = self.current_class.tostr()
-                    if class_name in self.class_kill_reqs.keys() and self.has_item(class_name):
+                    if not self.has_item(class_name):
+                        # player does not have this class, don't send any checks
+                        return
+
+                    if class_name in self.class_kill_reqs.keys():
                         # Class general kill
                         val = self.class_kill_counts.get(class_name, 0)
                         req = self.class_kill_reqs.get(class_name, 0)
@@ -250,6 +254,7 @@ class TF2Context(CommonContext):
                         self.echo(
                             "!!!!! Your class is unknown by the client. Switch classes or type  'record 1' and then 'stop'  "
                             "in the console to fix this. !!!!!")
+                    return
 
                 if info.weapon_internal == "loose_cannon_impact":
                     # Loose Cannon has two different kill names

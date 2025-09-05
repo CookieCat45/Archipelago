@@ -120,6 +120,13 @@ class MeleeWeaponRules(Choice):
     option_allow_knives_and_swords_only = 4
     default = 4
 
+class UnbannedWeapons(OptionList):
+    """Weapons in this list will always be allowed in the pool and will take priority over other options that ban
+    weapons such as BannedWeapons and MeleeWeaponRules."""
+    default = (
+
+    )
+
 class TrapChance(Range):
     """The chance for a junk item in the pool to be replaced by a trap."""
     range_start = 0
@@ -222,6 +229,7 @@ class TF2Options(PerGameCommonOptions):
     WeaponKillObjectiveCountMax: WeaponKillObjectiveCountMax
     EvenWeaponCounts: EvenWeaponCounts
     MeleeWeaponRules: MeleeWeaponRules
+    UnbannedWeapons: UnbannedWeapons
     TrapChance: TrapChance
     #TauntTrapWeight: TauntTrapWeight
     #MeleeOnlyTrapWeight: MeleeOnlyTrapWeight

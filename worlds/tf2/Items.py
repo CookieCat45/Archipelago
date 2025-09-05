@@ -1,10 +1,86 @@
 from typing import TYPE_CHECKING, List, Dict
 from BaseClasses import ItemClassification, Item
-from .Data import TFClass, TF2Item, weapon_to_class, weapon_kill_names, multiclass_weapons, weapon_list, class_names
+from .Data import TFClass, TF2Item, weapon_to_class, weapon_kill_names, multiclass_weapons, weapon_list, class_names,\
+knives, swords, melee_weapons
+from .Options import ol_to_list, MeleeWeaponRules
 
 if TYPE_CHECKING:
     from . import TF2World
 
+def init_available_weapons(self):
+    weapon_count = self.random.randint(
+        min(self.options.MinWeaponsInPool.value, self.options.MaxWeaponsInPool.value),
+        max(self.options.MaxWeaponsInPool.value, self.options.MinWeaponsInPool.value))
+
+    class_list = ol_to_list(self.options.AllowedClasses)
+    max_per_class = weapon_count
+    per_class_counts = {}
+    if self.options.EvenWeaponCounts:
+        max_per_class = weapon_count / len(class_list)
+
+    banned_weps = ol_to_list(self.options.BannedWeapons)
+    unbanned_weps = ol_to_list(self.options.UnbannedWeapons)
+    for class_name in self.options.AllowedClasses:
+        class_type = TFClass[class_name.upper()]
+        if class_type == TFClass.UNKNOWN:
+            raise Exception(f"Unknown class name \"{class_name}\" in AllowedClasses list")
+
+        count = 0
+        weapons = list(weapon_kill_names[class_type].values())
+        self.random.shuffle(weapons)
+        for w in weapons:
+            if w in self.available_weapons:
+                continue
+
+            if w not in unbanned_weps:
+                if w in banned_weps:
+                    continue
+
+                if not self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_all and w in melee_weapons:
+                    if self.options.MeleeWeaponRules == MeleeWeaponRules.option_disallow_all:
+                        continue
+                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_only and w not in knives:
+                        continue
+                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_swords_only and w not in swords:
+                        continue
+                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_and_swords_only:
+                        if w not in knives and w not in swords:
+                            continue
+
+            self.available_weapons.append(w)
+            count += 1
+            per_class_counts[class_type] = count
+            if count >= max_per_class:
+                break
+
+    # shuffle and truncate
+    self.random.shuffle(self.available_weapons)
+    if self.options.EvenWeaponCounts:
+        index = 0
+        values_list = list(per_class_counts.values())
+        average = sum(values_list) / len(values_list)
+        self.random.shuffle(class_list)
+        while len(per_class_counts) > 0:
+            current_class = TFClass[class_list[index].upper()]
+            if current_class not in per_class_counts.keys():
+                index += 1
+                if index >= len(class_list):
+                    index = 0
+                continue
+            elif per_class_counts[current_class] <= average:
+                del per_class_counts[current_class]
+                continue
+
+            for wep in self.available_weapons:
+                if weapon_to_class.get(wep) == current_class:
+                    self.available_weapons.remove(wep)
+                    per_class_counts[current_class] -= 1
+                    index += 1
+                    if index >= len(class_list):
+                        index = 0
+                    break
+    elif len(self.available_weapons) > weapon_count:
+        del self.available_weapons[weapon_count:]
 
 def create_itempool(world: "TF2World") -> List[Item]:
     item_list: List[Item] = []
