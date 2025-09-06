@@ -99,16 +99,20 @@ weapon_kill_names = [
 
     # Scout
     {
+        "scattergun": "Scattergun",
         "back_scatter": "Back Scatter",
         "force_a_nature": "Force-a-Nature",
         "pep_brawlerblaster": "Baby Face's Blaster",
         "shortstop": "Shortstop",
         "soda_popper": "Soda Popper",
 
+        "pistol_scout": "Pistol",
+        "maxgun": "Pistol",
         "pep_pistol": "Pretty Boy's Pocket Pistol",
         "the_winger": "Winger",
         "guillotine": "Flying Guillotine",
 
+        "bat": "Bat",
         "sandman": "Sandman",
         "atomizer": "Atomizer",
         "boston_basher": "Boston Basher",
@@ -123,6 +127,8 @@ weapon_kill_names = [
 
     # Soldier
     {
+        "tf_projectile_rocket": "Rocket Launcher",
+        "quake_rl": "The Original",
         "cow_mangler": "Cow Mangler 5000",
         "airstrike": "Air Strike",
         "blackbox": "Black Box",
@@ -130,11 +136,13 @@ weapon_kill_names = [
         "rocketlauncher_directhit": "Direct Hit",
         "liberty_launcher": "Liberty Launcher",
 
+        "shotgun_soldier": "Shotgun",
         "reserve_shooter": "Reserve Shooter",
         "panic_attack": "Panic Attack",
         "righteous_bison": "Righteous Bison",
         "mantreads": "Mantreads",
 
+        "shovel": "Shovel",
         "unique_pickaxe_escape": "Escape Plan",
         "paintrain": "Pain Train",
         "unique_pickaxe": "Equalizer",
@@ -156,11 +164,15 @@ weapon_kill_names = [
         "deflect_huntsman_flyingburn": "Reflect",
         "deflect_huntsman_flyingburn_headshot": "Reflect",
 
+        "flamethrower": "Flame Thrower",
+        "ai_flamethrower": "Flame Thrower",
+        "rainblower": "Flame Thrower",
         "phlogistinator": "Phlogistinator",
         "dragons_fury": "Dragon's Fury",
         "backburner": "Backburner",
         "degreaser": "Degreaser",
 
+        "shotgun_pyro": "Shotgun",
         "reserve_shooter": "Reserve Shooter",
         "panic_attack": "Panic Attack",
         "flaregun": "Flare Gun",
@@ -183,17 +195,21 @@ weapon_kill_names = [
 
     # Demoman
     {
+        "tf_projectile_pipe": "Grenade Launcher",
         "iron_bomber": "Iron Bomber",
         "loose_cannon": "Loose Cannon",
         "loose_cannon_impact": "Loose Cannon",
         "loch_n_load": "Loch-n-Load",
 
+        "tf_projectile_pipe_remote": "Stickybomb Launcher",
         "sticky_resistance": "Scottish Resistance",
         "quickiebomb_launcher": "Quickiebomb Launcher",
         "demoshield": "Chargin' Targe",
         "splendid_screen": "Splendid Screen",
         "tide_turner": "Tide Turner",
 
+        "bottle": "Bottle",
+        "scotland_shard": "Bottle",
         "ullapool_caber": "Ullapool Caber",
         "ullapool_caber_explosion": "Ullapool Caber",
         "battleaxe": "Scotsman's Skullcutter",
@@ -208,14 +224,18 @@ weapon_kill_names = [
 
     # Heavy
     {
+        "minigun": "Minigun",
+        "iron_curtain": "Minigun",
         "natascha": "Natascha",
         "tomislav": "Tomislav",
         "brass_beast": "Brass Beast",
         "long_heatmaker": "Huo-Long Heater",
 
+        "shotgun_hwg": "Shotgun",
         "panic_attack": "Panic Attack",
         "family_business": "Family Business",
 
+        "fists": "Fists",
         "holiday_punch": "Holiday Punch",
         "warrior_spirit": "Warrior's Spirit",
         "steel_fists": "Fists of Steel",
@@ -226,15 +246,19 @@ weapon_kill_names = [
 
     # Engineer
     {
+        "shotgun_primary": "Shotgun",
         "rescue_ranger": "Rescue Ranger",
         "widowmaker": "Widowmaker",
         "pomson": "Pomson 6000",
         "frontier_justice": "Frontier Justice",
         "panic_attack": "Panic Attack",
 
+        "pistol": "Pistol",
+        "maxgun": "Pistol",
         "short_circuit": "Short Circuit",
         "tf_projectile_mechanicalarmorb": "Short Circuit",
 
+        "wrench": "Wrench",
         "eureka_effect": "Eureka Effect",
         "wrench_jag": "Jag",
         "robot_arm_kill": "Gunslinger",
@@ -245,10 +269,12 @@ weapon_kill_names = [
 
     # Medic
     {
+        "syringegun_medic": "Syringe Gun",
         "blutsauger": "Blutsauger",
         "proto_syringe": "Overdose",
         "crusaders_crossbow": "Crusader's Crossbow",
 
+        "bonesaw": "Bonesaw",
         "ubersaw": "Ubersaw",
         "solemn_vow": "Solemn Vow",
         "amputator": "Amputator",
@@ -258,6 +284,8 @@ weapon_kill_names = [
 
     # Sniper
     {
+        "sniperrifle": "Sniper Rifle",
+        "awper_hand": "Sniper Rifle",
         "pro_rifle": "Hitman's Heatmaker",
         "machina": "Machina",
         "player_penetration": "Machina",
@@ -266,21 +294,24 @@ weapon_kill_names = [
         "bazaar_bargain": "Bazaar Bargain",
         "the_classic": "Classic",
 
+        "smg": "SMG",
         "pro_smg": "Cleaner's Carbine",
 
+        "club": "Kukri",
         "bushwacka": "Bushwacka",
-
         "tribalkukri": "Tribalman's Shiv",
         "shahanshah": "Shahanshah",
     },
 
     # Spy
     {
+        "revolver": "Revolver",
         "diamondback": "Diamondback",
         "ambassador": "Ambassador",
         "enforcer": "Enforcer",
         "letranger": "L'Etranger",
 
+        "knife": "Knife",
         "kunai": "Conniver's Kunai",
         "big_earner": "Big Earner",
         "spy_cicle": "Spy-cicle",
@@ -292,9 +323,12 @@ multiclass_weapons = [
     "Half-Zatoichi",
     "Reserve Shooter",
     "Panic Attack",
+    "Pistol",
+    "Shotgun",
 ]
 
 knives = [
+    "Knife",
     "Conniver's Kunai",
     "Big Earner",
     "Spy-cicle",
@@ -309,9 +343,49 @@ swords = [
     "Persian Persuader",
 ]
 
+stock_guns = [
+    "Scattergun",
+    "Pistol",
+
+    "Rocket Launcher",
+    "Shotgun",
+
+    "Flame Thrower",
+
+    "Grenade Launcher",
+    "Stickybomb Launcher",
+
+    "Minigun",
+
+    "Syringe Gun",
+
+    "Sniper Rifle",
+    "SMG",
+
+    "Revolver",
+]
+
+stock_melee = [
+    "Bat",
+    "Shovel",
+    "Fire Axe",
+    "Bottle",
+    "Fists",
+    "Wrench",
+    "Bonesaw",
+    "Kukri",
+    "Knife",
+]
+
+stock_weapons = [
+    *stock_guns,
+    *stock_melee,
+]
+
 melee_weapons = [
     *knives,
     *swords,
+    *stock_melee,
 
     "Sandman",
     "Atomizer",
@@ -363,8 +437,22 @@ melee_weapons = [
 trap_ids = {
     "Taunt Trap": 10,
     "Melee-Only Trap": 11,
-    "Disconnect Trap": 12
+    "Disconnect Trap": 12,
 }
+
+allclass_melee_internal = [
+    "saxxy",
+    "prinny_machete",
+    "ham_shank",
+    "skullbat",
+    "golden_fryingpan",
+    "fryingpan",
+    "freedom_staff",
+    "nonnonviolent_protest",
+    "memory_maker",
+    "crossing_guard",
+    "necro_smasher",
+]
 
 weapon_list = []
 def _init_weapon_list():

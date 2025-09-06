@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, List, Dict
 from BaseClasses import ItemClassification, Item
 from .Data import TFClass, TF2Item, weapon_to_class, weapon_kill_names, multiclass_weapons, weapon_list, class_names,\
-knives, swords, melee_weapons
-from .Options import ol_to_list, MeleeWeaponRules
+knives, swords, melee_weapons, stock_melee, stock_weapons
+from .Options import ol_to_list, MeleeWeaponRules, IncludeStockWeapons
 
 if TYPE_CHECKING:
     from . import TF2World
@@ -35,6 +35,12 @@ def init_available_weapons(self):
             if w not in unbanned_weps:
                 if w in banned_weps:
                     continue
+
+                if self.options.IncludeStockWeapons != IncludeStockWeapons.option_true:
+                    if self.options.IncludeStockWeapons == IncludeStockWeapons.option_no_melee and w in stock_melee:
+                        continue
+                    elif self.options.IncludeStockWeapons == IncludeStockWeapons.option_false and w in stock_weapons:
+                        continue
 
                 if not self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_all and w in melee_weapons:
                     if self.options.MeleeWeaponRules == MeleeWeaponRules.option_disallow_all:

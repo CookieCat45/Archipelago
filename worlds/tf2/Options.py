@@ -44,6 +44,7 @@ class BannedWeapons(OptionList):
     """List of weapons that will never be added to the item pool or have kill checks requiring them."""
     default = (
         "Flying Guillotine",
+        "Bat",
         "Wrap Assassin",
         "Fan O'War",
         "Atomizer",
@@ -75,6 +76,7 @@ class BannedWeapons(OptionList):
         "Pomson 6000",
         "Rescue Ranger",
         "Short Circuit",
+        "Wrench",
         "Jag",
         "Eureka Effect",
         "Southern Hospitality",
@@ -84,6 +86,7 @@ class BannedWeapons(OptionList):
 
         "Classic",
         "Cleaner's Carbine",
+        "Kukri",
         "Tribalman's Shiv",
         "Shahanshah",
 
@@ -119,6 +122,13 @@ class MeleeWeaponRules(Choice):
     option_allow_swords_only = 3
     option_allow_knives_and_swords_only = 4
     default = 4
+
+class IncludeStockWeapons(Choice):
+    """Whether or not to include Stock weapons in the pool."""
+    option_false = 0
+    option_true = 1
+    option_no_melee = 2
+    default = 0
 
 class UnbannedWeapons(OptionList):
     """Weapons in this list will always be allowed in the pool and will take priority over other options that ban
@@ -229,6 +239,7 @@ class TF2Options(PerGameCommonOptions):
     WeaponKillObjectiveCountMax: WeaponKillObjectiveCountMax
     EvenWeaponCounts: EvenWeaponCounts
     MeleeWeaponRules: MeleeWeaponRules
+    IncludeStockWeapons: IncludeStockWeapons
     UnbannedWeapons: UnbannedWeapons
     TrapChance: TrapChance
     #TauntTrapWeight: TauntTrapWeight

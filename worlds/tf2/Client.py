@@ -7,7 +7,7 @@ import socket
 from random import randint
 from copy import deepcopy
 from NetUtils import JSONtoTextParser, JSONMessagePart, ClientStatus
-from .Data import class_uses_weapon, TFClass, TFKillInfo, get_kill_info
+from .Data import class_uses_weapon, TFClass, TFKillInfo, get_kill_info, stock_melee, allclass_melee_internal
 from .Items import get_item_id
 from .Regions import get_location_id
 from CommonClient import CommonContext, gui_enabled, ClientCommandProcessor, logger, get_base_parser
@@ -256,11 +256,7 @@ class TF2Context(CommonContext):
                             "in the console to fix this. !!!!!")
                     return
 
-                if info.weapon_internal == "loose_cannon_impact":
-                    # Loose Cannon has two different kill names
-                    info.weapon = "Loose Cannon"
-                    info.weapon_internal = "loose_cannon"
-                elif info.weapon_internal == "bleed_kill":
+                if info.weapon_internal == "bleed_kill":
                     if self.current_class == TFClass.ENGINEER:
                         info.weapon = "Southern Hospitality"
                         info.weapon_internal = "southern_hospitality"
@@ -279,6 +275,9 @@ class TF2Context(CommonContext):
                         elif self.has_item("Boston Basher") and basher_kills < basher_req:
                             info.weapon = "Boston Basher"
                             info.weapon_internal = "boston_basher"
+                elif info.weapon_internal in allclass_melee_internal:
+                    # convert allclass melee to stock weapon name
+                    info.weapon = stock_melee[int(self.current_class)-1]
 
                 weapon = info.weapon
                 if weapon in self.weapon_kill_reqs.keys() and self.has_item(weapon):
