@@ -74,7 +74,6 @@ def create_tf2_objectives(world: "TF2World") -> int:
         world.multiworld.regions.append(class_region)
 
     world.multiworld.regions.append(menu)
-    print(f"Total Locations = {location_count}")
     return location_count
 
 

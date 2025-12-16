@@ -244,11 +244,11 @@ class TF2Context(CommonContext):
 
                             if val >= req:
                                 self.echo(f"[ARCHIPELAGO] COMPLETED CONTRACT: Kills as {class_name} ({val}/{req})")
-                                self.play_sound("ui/quest_status_tick_expert.wav")
+                                self.play_gamesound("Quest.StatusTickExpert")
                                 self.add_contract_points(1)
                                 sound_played_expert = True
                             else:
-                                self.play_sound("ui/quest_status_tick_novice.wav")
+                                self.play_gamesound("Quest.StatusTickNovice")
                                 sound_played_novice = True
 
                             self.update_ui()
@@ -300,10 +300,10 @@ class TF2Context(CommonContext):
                             self.echo(f"[ARCHIPELAGO] COMPLETED CONTRACT: Kills with {weapon} ({val}/{req})")
                             self.add_contract_points(1)
                             if not sound_played_expert:
-                                self.play_sound("ui/quest_status_tick_expert.wav")
+                                self.play_gamesound("Quest.StatusTickExpert")
                         else:
                             if not sound_played_novice and not sound_played_expert:
-                                self.play_sound("ui/quest_status_tick_novice.wav")
+                                self.play_gamesound("Quest.StatusTickNovice")
 
                         self.update_ui()
         elif line.find(self.steam_name) != -1:
@@ -320,6 +320,9 @@ class TF2Context(CommonContext):
 
     def play_sound(self, sound: str):
         self.cmd_queue.append(TF2Cmd(cmd='play', args=sound))
+
+    def play_gamesound(self, sound: str):
+        self.cmd_queue.append(TF2Cmd(cmd='playgamesound', args=sound))
 
     def update_ui(self):
         if self.current_class != TFClass.UNKNOWN:
@@ -339,7 +342,7 @@ class TF2Context(CommonContext):
         if self.points >= self.required_points:
             Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
             self.echo("[ARCHIPELAGO] ********* CONGRATULATIONS! You're finished! ********")
-            self.play_sound("misc/happy_birthday_tf_14.wav")
+            self.play_gamesound("Game.HappyBirthday")
 
     def cleanup(self):
         self.rcon_password = ""
@@ -434,6 +437,7 @@ class TF2Context(CommonContext):
                 return
 
             progression = False
+            new_class = False
             paranoia = False
             if start_index <= len(self.items_received):
                 for i in args['items']:
@@ -451,14 +455,22 @@ class TF2Context(CommonContext):
                         self.taunt_trap_duration = 15
                     elif i.item == 56: # Melee Only Trap
                         self.melee_only_duration = 30
-                    elif i.item >= 1000 or i.item <= 9:
-                        # Progression
+                    elif i.item <= 9:
+                        # new class
+                        new_class = True
+                    else:
+                        # assume progression, probably a weapon
                         progression = True
 
             if paranoia:
-                self.play_sound("player/spy_uncloak.wav")
+                self.cmd_queue.append(TF2Cmd("wait", "20"))
+                self.play_gamesound("Player.Spy_UnCloak")
+            elif new_class:
+                self.cmd_queue.append(TF2Cmd("wait", "8"))
+                self.play_sound("ui/duel_challenge_accepted.wav")
             elif progression:
-                self.play_sound("ui/item_acquired.wav")
+                self.cmd_queue.append(TF2Cmd("wait", "4"))
+                self.play_gamesound("BaseCombatWeapon.WeaponMaterialize")
 
             self.update_ui()
 

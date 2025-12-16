@@ -66,27 +66,24 @@ def init_available_weapons(self):
         values_list = list(per_class_counts.values())
         average = sum(values_list) / len(values_list)
         self.random.shuffle(class_list)
-        while len(per_class_counts) > 0:
+        while index < len(class_list):
             current_class = TFClass[class_list[index].upper()]
             if current_class not in per_class_counts.keys():
                 index += 1
-                if index >= len(class_list):
-                    index = 0
-                continue
-            elif per_class_counts[current_class] <= average:
-                del per_class_counts[current_class]
                 continue
 
-            for wep in self.available_weapons:
-                if weapon_to_class.get(wep) == current_class:
-                    self.available_weapons.remove(wep)
-                    per_class_counts[current_class] -= 1
-                    index += 1
-                    if index >= len(class_list):
-                        index = 0
-                    break
+            while per_class_counts[current_class] > average:
+                for wep in self.available_weapons:
+                    if weapon_to_class.get(wep) == current_class.tostr():
+                        self.available_weapons.remove(wep)
+                        per_class_counts[current_class] -= 1
+                        break
+
+            index += 1
+
     elif len(self.available_weapons) > weapon_count:
         del self.available_weapons[weapon_count:]
+
 
 def create_itempool(world: "TF2World") -> List[Item]:
     item_list: List[Item] = []
@@ -125,6 +122,7 @@ def create_itempool(world: "TF2World") -> List[Item]:
 
     return item_list
 
+
 def create_item(world: "TF2World", name: str, code: int) -> Item:
     item_class: ItemClassification
     if name == "Contract Hint":
@@ -135,6 +133,7 @@ def create_item(world: "TF2World", name: str, code: int) -> Item:
         item_class = ItemClassification.progression
 
     return TF2Item(name, item_class, code, world.player)
+
 
 def get_item_id(name: str) -> int:
     if name == "Contract Hint":
@@ -189,6 +188,7 @@ def get_item_id(name: str) -> int:
         count += 1
 
     return weapon_id
+
 
 def get_item_ids() -> Dict[str, int]:
     item_ids = {}
