@@ -86,6 +86,8 @@ class TF2Context(CommonContext):
         self.slot_data = None
         self.death_count = 0
         self.death_req = 3
+        self.taunt_trap_duration = 0
+        self.melee_only_duration = 0
         self.weapon_kill_reqs = {}
         self.class_kill_reqs = {}
         self.weapon_kill_counts = {}
@@ -97,6 +99,7 @@ class TF2Context(CommonContext):
         self.condump_io = None
         self.rcon_password = ""
         self.current_class = TFClass.UNKNOWN
+        self.class_check_time = 0
 
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
@@ -252,7 +255,7 @@ class TF2Context(CommonContext):
                 else:
                     for i in range(6):
                         self.echo(
-                            "!!!!! Your class is unknown by the client. Switch classes or type  'record 1' and then 'stop'  "
+                            "!!!!! Your class is unknown by the client. Switch classes OR type  'record 1' and then 'stop'  "
                             "in the console to fix this. !!!!!")
                     return
 
@@ -299,7 +302,7 @@ class TF2Context(CommonContext):
                             if not sound_played_expert:
                                 self.play_sound("ui/quest_status_tick_expert.wav")
                         else:
-                            if not sound_played_novice:
+                            if not sound_played_novice and not sound_played_expert:
                                 self.play_sound("ui/quest_status_tick_novice.wav")
 
                         self.update_ui()
@@ -337,7 +340,6 @@ class TF2Context(CommonContext):
             Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
             self.echo("[ARCHIPELAGO] ********* CONGRATULATIONS! You're finished! ********")
             self.play_sound("misc/happy_birthday_tf_14.wav")
-            self.play_sound("misc/happy_birthday.wav")
 
     def cleanup(self):
         self.rcon_password = ""
@@ -431,6 +433,8 @@ class TF2Context(CommonContext):
             if start_index == 0:
                 return
 
+            progression = False
+            paranoia = False
             if start_index <= len(self.items_received):
                 for i in args['items']:
                     if i.item == 50: # Contract Hint
@@ -440,9 +444,21 @@ class TF2Context(CommonContext):
                     elif i.item == 52: # Disconnect Trap
                         self.cmd_queue.append(TF2Cmd(cmd='disconnect'))
                     elif i.item == 53: # Paranoia Trap
-                        self.play_sound("player/spy_uncloak.wav")
+                        paranoia = True
                     elif i.item == 54: # snd_restart Trap
                         self.cmd_queue.append(TF2Cmd(cmd='snd_restart'))
+                    elif i.item == 55: # Taunt Trap
+                        self.taunt_trap_duration = 15
+                    elif i.item == 56: # Melee Only Trap
+                        self.melee_only_duration = 30
+                    elif i.item >= 1000 or i.item <= 9:
+                        # Progression
+                        progression = True
+
+            if paranoia:
+                self.play_sound("player/spy_uncloak.wav")
+            elif progression:
+                self.play_sound("ui/item_acquired.wav")
 
             self.update_ui()
 
@@ -497,16 +513,25 @@ async def rcon_loop(ctx: TF2Context):
                             index = name.find(" ( def. \"unnamed\" )")
                             name = name[1:index-1]
                             ctx.steam_name = name
+                            ctx.class_check_time = 0
                             logger.info(f"Your name is: {ctx.steam_name}")
                         if ctx.current_class == TFClass.UNKNOWN:
                             # this forces class configs to execute, so we can see what class the player is playing
                             # after a reconnect
-                            ctx.rcon.command("record ap_dummy; stop")
-
+                            ctx.class_check_time -= 0.1
+                            if ctx.class_check_time <= 0: # don't do this too often to prevent mass lag
+                                ctx.rcon.command("record ap_dummy; stop")
+                                ctx.class_check_time = 8.0
                         if len(ctx.cmd_queue) > 0:
                             for c in ctx.cmd_queue:
                                 ctx.rcon.command(c.cmd, c.args)
                             ctx.cmd_queue.clear()
+                        if ctx.taunt_trap_duration > 0:
+                            ctx.rcon.command("taunt")
+                            ctx.taunt_trap_duration -= 0.1
+                        if ctx.melee_only_duration > 0:
+                            ctx.rcon.command("slot3")
+                            ctx.melee_only_duration -= 0.1
 
                         condump = ctx.get_condump_file()
                         if ctx.condump_io is not None or os.path.isfile(condump):
@@ -523,7 +548,9 @@ async def rcon_loop(ctx: TF2Context):
                 ctx.cleanup()
             except Exception as e:
                 logger.info(f"TF2 RCON Connection failed or aborted ({e})")
-                ctx.cleanup()
+                logger.info("Attempting to connect again in 5 seconds...")
+                ctx.rcon = None
+                await asyncio.sleep(5)
 
         await asyncio.sleep(0.1)
 

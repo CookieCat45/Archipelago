@@ -116,6 +116,8 @@ def create_itempool(world: "TF2World") -> List[Item]:
             trap_list["Disconnect Trap"] = world.options.DisconnectTrapWeight.value
             trap_list["Paranoia Trap"] = world.options.ParanoiaTrapWeight.value
             trap_list["snd_restart Trap"] = world.options.SndRestartTrapWeight.value
+            trap_list["Taunt Trap"] = world.options.TauntTrapWeight.value
+            trap_list["Melee Only Trap"] = world.options.MeleeOnlyTrapWeight.value
             item_list.append(world.create_item(
                 world.random.choices(list(trap_list.keys()), weights=list(trap_list.values()), k=1)[0]))
         else:

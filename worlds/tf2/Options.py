@@ -171,21 +171,19 @@ class SndRestartTrapWeight(Range):
     range_end = 100
     default = 0
 
-# TODO: Implement
 class TauntTrapWeight(Range):
     """The weight of Taunt Traps in the trap pool.
     Taunt traps force you to taunt constantly for 15 seconds."""
     range_start = 0
     range_end = 100
-    default = 40
+    default = 20
 
-# TODO: Implement
 class MeleeOnlyTrapWeight(Range):
     """The weight of Melee-Only Traps in the trap pool.
     Melee-Only Traps force you to use your melee weapon for 30 seconds."""
     range_start = 0
     range_end = 100
-    default = 40
+    default = 20
 
 class GeneralKillObjectiveCountMin(Range):
     """The minimum number of general kills performed as each class that will be location checks.
@@ -222,8 +220,8 @@ class WeaponKillObjectiveCountMax(Range):
 class DeathLinkAmnesty(Range):
     """How many deaths that are required to send out a DeathLink."""
     range_start = 1
-    range_end = 5
-    default = 3
+    range_end = 15
+    default = 5
 
 @dataclass
 class TF2Options(PerGameCommonOptions):
@@ -242,8 +240,8 @@ class TF2Options(PerGameCommonOptions):
     IncludeStockWeapons: IncludeStockWeapons
     UnbannedWeapons: UnbannedWeapons
     TrapChance: TrapChance
-    #TauntTrapWeight: TauntTrapWeight
-    #MeleeOnlyTrapWeight: MeleeOnlyTrapWeight
+    TauntTrapWeight: TauntTrapWeight
+    MeleeOnlyTrapWeight: MeleeOnlyTrapWeight
     SndRestartTrapWeight: SndRestartTrapWeight
     ParanoiaTrapWeight: ParanoiaTrapWeight
     KillbindTrapWeight: KillbindTrapWeight

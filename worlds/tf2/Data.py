@@ -128,7 +128,7 @@ weapon_kill_names = [
     # Soldier
     {
         "tf_projectile_rocket": "Rocket Launcher",
-        "quake_rl": "The Original",
+        "quake_rl": "Original",
         "cow_mangler": "Cow Mangler 5000",
         "airstrike": "Air Strike",
         "blackbox": "Black Box",
@@ -164,9 +164,9 @@ weapon_kill_names = [
         "deflect_huntsman_flyingburn": "Reflect",
         "deflect_huntsman_flyingburn_headshot": "Reflect",
 
-        "flamethrower": "Flame Thrower",
-        "ai_flamethrower": "Flame Thrower",
-        "rainblower": "Flame Thrower",
+        "flamethrower": "Flamethrower",
+        "ai_flamethrower": "Flamethrower",
+        "rainblower": "Flamethrower",
         "phlogistinator": "Phlogistinator",
         "dragons_fury": "Dragon's Fury",
         "backburner": "Backburner",
@@ -350,7 +350,7 @@ stock_guns = [
     "Rocket Launcher",
     "Shotgun",
 
-    "Flame Thrower",
+    "Flamethrower",
 
     "Grenade Launcher",
     "Stickybomb Launcher",
@@ -433,12 +433,6 @@ melee_weapons = [
     "Bushwacka",
     "Shahanshah",
 ]
-
-trap_ids = {
-    "Taunt Trap": 10,
-    "Melee-Only Trap": 11,
-    "Disconnect Trap": 12,
-}
 
 allclass_melee_internal = [
     "saxxy",
