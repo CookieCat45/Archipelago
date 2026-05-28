@@ -91,6 +91,7 @@ def init_available_weapons(world: "TF2World"):
 def create_itempool(world: "TF2World") -> List[Item]:
     item_list: List[Item] = []
     weapon_itempool = []
+    no_classes: bool = len(world.options.AllowedClasses.value) <= 0
     for class_name in world.options.AllowedClasses:
         # create the "class" item
         if class_name not in world.starting_classes:
@@ -108,7 +109,16 @@ def create_itempool(world: "TF2World") -> List[Item]:
             break
 
     if len(item_list) < world.total_locations:
+        starting_bundle = False
         for bundle_name in world.mvm_bundles.keys():
+            if not starting_bundle and no_classes:
+                world.multiworld.push_precollected(world.create_item(bundle_name))
+                starting_bundle = True
+                if len(item_list) >= world.total_locations:
+                    break
+
+                continue
+
             item_list.append(world.create_item(bundle_name))
             if len(item_list) >= world.total_locations:
                 break
