@@ -3,6 +3,9 @@ import socket
 import struct
 import datetime
 
+class BadRCONPassword(Exception):
+    """ Bad RCON password."""
+
 class RCONClient:
     AUTH_FAILURE = -1
     SERVERDATA_EXECCOMMAND = 2
@@ -19,7 +22,7 @@ class RCONClient:
     def __enter__(self):
         self.connect()
         if not self.login():
-            raise Exception("Authentication failed.")
+            raise BadRCONPassword("Authentication failed - wrong RCON password.")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -43,8 +46,9 @@ class RCONClient:
             packet = self._create_packet(self.SERVERDATA_AUTH, self.password)
             self.socket.send(packet)
             response = self._receive_response()
+            response = self._receive_response()
+            print(f"Response = {response['request_id']}")
             if response['request_id'] == self.AUTH_FAILURE:
-                print("Authentication failed: Incorrect password.")
                 return False
             print("Authentication successful.")
             return True
@@ -69,10 +73,10 @@ class RCONClient:
             self.socket.close()
             print("Connection closed.")
 
-    def _create_packet(self, request_type, body):
+    def _create_packet(self, request_type, body: str):
         """Creates a packet to be sent to the RCON server."""
         self.request_id += 1
-        body_encoded = body.encode('utf-8')
+        body_encoded = body.encode('utf-8', errors='ignore')
         packet_size = 10 + len(body_encoded)
         packet = struct.pack('<3i', packet_size, self.request_id, request_type) + body_encoded + b'\x00\x00'
         return packet
@@ -85,7 +89,7 @@ class RCONClient:
                 raise Exception("Incomplete response received from the server.")
 
             response_size, request_id, response_type = struct.unpack('<3i', response_data[:12])
-            body = response_data[12:response_size + 4].decode('utf-8').strip()
+            body = response_data[12:response_size + 4].decode('utf-8', errors='ignore').strip()
             return {'size': response_size, 'request_id': request_id, 'type': response_type, 'body': body}
         except socket.timeout:
             raise Exception("Socket timeout occurred while waiting for the response.")

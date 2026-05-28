@@ -1,88 +1,91 @@
+from copy import deepcopy
 from typing import TYPE_CHECKING, List, Dict
 from BaseClasses import ItemClassification, Item
 from .Data import TFClass, TF2Item, weapon_to_class, weapon_kill_names, multiclass_weapons, weapon_list, class_names,\
 knives, swords, melee_weapons, stock_melee, stock_weapons
-from .Options import ol_to_list, MeleeWeaponRules, IncludeStockWeapons
+from .Options import MeleeWeaponRules, IncludeStockWeapons, MvmContractBundleTotal
 
 if TYPE_CHECKING:
     from . import TF2World
 
-def init_available_weapons(self):
-    weapon_count = self.random.randint(
-        min(self.options.MinWeaponsInPool.value, self.options.MaxWeaponsInPool.value),
-        max(self.options.MaxWeaponsInPool.value, self.options.MinWeaponsInPool.value))
-
-    class_list = ol_to_list(self.options.AllowedClasses)
+def init_available_weapons(world: "TF2World"):
+    weapon_count = world.options.WeaponsInPool.value
+    class_list = deepcopy(world.options.AllowedClasses.value)
     max_per_class = weapon_count
     per_class_counts = {}
-    if self.options.EvenWeaponCounts:
+    if world.options.EvenWeaponCounts:
         max_per_class = weapon_count / len(class_list)
 
-    banned_weps = ol_to_list(self.options.BannedWeapons)
-    unbanned_weps = ol_to_list(self.options.UnbannedWeapons)
-    for class_name in self.options.AllowedClasses:
+    banned_weps = world.options.BannedWeapons.value
+    unbanned_weps = world.options.UnbannedWeapons.value
+    for class_name in world.options.AllowedClasses:
         class_type = TFClass[class_name.upper()]
         if class_type == TFClass.UNKNOWN:
             raise Exception(f"Unknown class name \"{class_name}\" in AllowedClasses list")
 
         count = 0
         weapons = list(weapon_kill_names[class_type].values())
-        self.random.shuffle(weapons)
+        world.random.shuffle(weapons)
         for w in weapons:
-            if w in self.available_weapons:
+            if w in world.available_weapons:
                 continue
 
             if w not in unbanned_weps:
+                # Is this weapon banned from the pool?
                 if w in banned_weps:
                     continue
 
-                if self.options.IncludeStockWeapons != IncludeStockWeapons.option_true:
-                    if self.options.IncludeStockWeapons == IncludeStockWeapons.option_no_melee and w in stock_melee:
+                # Stock weapons
+                if world.options.IncludeStockWeapons != IncludeStockWeapons.option_true:
+                    if world.options.IncludeStockWeapons == IncludeStockWeapons.option_no_melee and w in stock_melee:
                         continue
-                    elif self.options.IncludeStockWeapons == IncludeStockWeapons.option_false and w in stock_weapons:
+                    elif world.options.IncludeStockWeapons == IncludeStockWeapons.option_false and w in stock_weapons:
                         continue
 
-                if not self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_all and w in melee_weapons:
-                    if self.options.MeleeWeaponRules == MeleeWeaponRules.option_disallow_all:
+                # Melee weapons
+                if not world.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_all and w in melee_weapons:
+                    if world.options.MeleeWeaponRules == MeleeWeaponRules.option_disallow_all:
                         continue
-                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_only and w not in knives:
+                    elif world.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_only and w not in knives:
                         continue
-                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_swords_only and w not in swords:
+                    elif world.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_swords_only and w not in swords:
                         continue
-                    elif self.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_and_swords_only:
+                    elif world.options.MeleeWeaponRules == MeleeWeaponRules.option_allow_knives_and_swords_only:
                         if w not in knives and w not in swords:
                             continue
 
-            self.available_weapons.append(w)
+            world.available_weapons.append(w)
             count += 1
             per_class_counts[class_type] = count
             if count >= max_per_class:
                 break
 
     # shuffle and truncate
-    self.random.shuffle(self.available_weapons)
-    if self.options.EvenWeaponCounts:
+    world.random.shuffle(world.available_weapons)
+    if world.options.EvenWeaponCounts:
         index = 0
         values_list = list(per_class_counts.values())
         average = sum(values_list) / len(values_list)
-        self.random.shuffle(class_list)
+        world.random.shuffle(class_list)
         while index < len(class_list):
             current_class = TFClass[class_list[index].upper()]
             if current_class not in per_class_counts.keys():
                 index += 1
                 continue
 
-            while per_class_counts[current_class] > average:
-                for wep in self.available_weapons:
+            attempts = 0
+            while per_class_counts[current_class] > average and attempts < 100:
+                attempts += 1
+                for wep in world.available_weapons:
                     if weapon_to_class.get(wep) == current_class.tostr():
-                        self.available_weapons.remove(wep)
+                        world.available_weapons.remove(wep)
                         per_class_counts[current_class] -= 1
                         break
 
             index += 1
 
-    elif len(self.available_weapons) > weapon_count:
-        del self.available_weapons[weapon_count:]
+    elif len(world.available_weapons) > weapon_count:
+        del world.available_weapons[weapon_count:]
 
 
 def create_itempool(world: "TF2World") -> List[Item]:
@@ -90,11 +93,11 @@ def create_itempool(world: "TF2World") -> List[Item]:
     weapon_itempool = []
     for class_name in world.options.AllowedClasses:
         # create the "class" item
-        class_type: TFClass = TFClass[class_name.upper()]
-        if class_type != world.starting_class:
+        if class_name not in world.starting_classes:
             item_list.append(world.create_item(class_name))
 
         # Figure out what weapons we're allowed to add to the pool for this class
+        class_type: TFClass = TFClass[class_name.upper()]
         for weapon_name in weapon_kill_names[int(class_type)].values():
             if weapon_name in world.available_weapons and weapon_name not in weapon_itempool:
                 weapon_itempool.append(weapon_name)
@@ -102,8 +105,13 @@ def create_itempool(world: "TF2World") -> List[Item]:
     for weapon_name in weapon_itempool:
         item_list.append(world.create_item(weapon_name))
         if len(item_list) >= world.total_locations:
-            # too many weapons vs available locations, stop adding them
             break
+
+    if len(item_list) < world.total_locations:
+        for bundle_name in world.mvm_bundles.keys():
+            item_list.append(world.create_item(bundle_name))
+            if len(item_list) >= world.total_locations:
+                break
 
     # Filler
     while len(item_list) < world.total_locations:
@@ -129,8 +137,10 @@ def create_item(world: "TF2World", name: str, code: int) -> Item:
         item_class = ItemClassification.filler
     elif "Trap" in name:
         item_class = ItemClassification.trap
-    else:
+    elif name in class_names or "MvM Contract Bundle" in name:
         item_class = ItemClassification.progression
+    else:
+        item_class = ItemClassification.progression_skip_balancing
 
     return TF2Item(name, item_class, code, world.player)
 
@@ -150,6 +160,9 @@ def get_item_id(name: str) -> int:
         return 55
     elif name == "Melee Only Trap":
         return 56
+    elif "MvM Contract Bundle" in name:
+        index = name.find("#")+1
+        return 950000+int(name[index:])
 
     if name in multiclass_weapons:
         weapon_id = 2000
@@ -197,6 +210,9 @@ def get_item_ids() -> Dict[str, int]:
 
     for name in class_names:
         item_ids.setdefault(name, get_item_id(name))
+
+    for i in range(MvmContractBundleTotal.range_end):
+        item_ids.setdefault(f"MvM Contract Bundle #{i+1}", 950000+i+1)
 
     item_ids.setdefault("Contract Hint", get_item_id("Contract Hint"))
     item_ids.setdefault("Reflect", get_item_id("Reflect"))

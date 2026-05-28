@@ -1,13 +1,15 @@
 import asyncio
+from enum import IntEnum
 import Utils
 import os
 from typing import Dict, Any
-from .Rcon import RCONClient
+from .Rcon import RCONClient, BadRCONPassword
 import socket
 from random import randint
 from copy import deepcopy
 from NetUtils import JSONtoTextParser, JSONMessagePart, ClientStatus
-from .Data import class_uses_weapon, TFClass, TFKillInfo, get_kill_info, stock_melee, allclass_melee_internal
+from .Data import (class_uses_weapon, TFClass, TFKillInfo, get_kill_info, stock_melee,
+                   allclass_melee_internal, weapon_to_class, get_multiclass_weapon_classes)
 from .Items import get_item_id
 from .Regions import get_location_id
 from CommonClient import CommonContext, gui_enabled, ClientCommandProcessor, logger, get_base_parser
@@ -16,17 +18,31 @@ from kivy.uix.layout import Layout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.scrollview import ScrollView
+from kivy.core.window import Window
 
 DEBUG = False
+
+class TF2GameMode(IntEnum):
+    UNKNOWN = 0,
+    CASUAL = 1,
+    MVM = 2
+
+class TF2UIMode(IntEnum):
+    UNKNOWN = 0,
+    VIEWING_CLASS = 1,
+    MVM_GRID = 2,
+    MVM_BUNDLE = 3,
 
 class TF2JSONToTextParser(JSONtoTextParser):
     def _handle_color(self, node: JSONMessagePart):
         return self._handle_text(node)  # No colors for the in-game text
 
 class TF2Cmd:
-    def __init__(self, cmd, args=""):
+    def __init__(self, cmd, args="", is_confilter=False):
         self.cmd = cmd
         self.args = args
+        self.is_confilter = is_confilter
 
 class TF2CommandProcessor(ClientCommandProcessor):
     def _cmd_tf2_connect(self, password: str):
@@ -50,7 +66,15 @@ class TF2CommandProcessor(ClientCommandProcessor):
 
             showed_hint = False
             for hint in self.ctx.contract_hints:
-                if not self.ctx.has_item(hint):
+                if self.ctx.is_mvm:
+                    bundle_name = self.ctx.get_bot_bundle_name(hint)
+                    if bundle_name != "UNKNOWN" and not self.ctx.has_item(bundle_name):
+                        hint += f" ({bundle_name})"
+                        logger.info(hint)
+                        showed_hint = True
+                        continue
+
+                if self.ctx.is_casual and hint not in self.ctx.mvm_kill_reqs.keys() and not self.ctx.has_item(hint):
                     logger.info(hint)
                     showed_hint = True
 
@@ -84,6 +108,10 @@ class TF2Context(CommonContext):
         self.items_handling = 0b111
         self.cmd_queue = []
         self.slot_data = None
+        self.game_mode = TF2GameMode.UNKNOWN
+        self.is_casual = False
+        self.is_mvm = False
+        self.ui_mode = TF2UIMode.UNKNOWN
         self.death_count = 0
         self.death_req = 3
         self.taunt_trap_duration = 0
@@ -92,7 +120,14 @@ class TF2Context(CommonContext):
         self.class_kill_reqs = {}
         self.weapon_kill_counts = {}
         self.class_kill_counts = {}
+        self.mvm_kill_reqs = {}
+        self.mvm_kill_counts = {}
+        self.mvm_bundles = {}
+        self.mvm_location_ids = {}
+        self.mvm_boss_names = []
+        self.mvm_boss_reward = 0
         self.contract_hints = []
+        self.current_mvm_bundle = ""
         self.points = 0
         self.required_points = 0
         self.game_folder_path = ""
@@ -100,6 +135,7 @@ class TF2Context(CommonContext):
         self.rcon_password = ""
         self.current_class = TFClass.UNKNOWN
         self.class_check_time = 0
+        self.mode_check_time = 0
 
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
@@ -162,13 +198,14 @@ class TF2Context(CommonContext):
         # if DEBUG:
             # logger.info(f"Console output: {line}")
 
-        if line.find("ap_say") == 0:
-            message: str = line.replace("ap_say ", "", 1)
+        if line.find("ap_say ") == 0:
+            index = line.find("ap_say ")+7
+            message: str = line[index:]
             message = message.strip("\n")
             Utils.async_start(self.send_msgs([{"cmd": "Say", "text": message}]))
         elif line.find("ap_classmissing") == 0:
             if self.current_class == TFClass.UNKNOWN:
-                self.echo("Your class is unknown by the client, type 'record 1' and then 'stop' in the console to fix this, or change classes.")
+                self.show_unknown_class_warning()
                 return
 
             message = ""
@@ -196,6 +233,7 @@ class TF2Context(CommonContext):
 
         elif line.find("not executing.") != -1 or line.find("execing") != -1:
             # Class change
+            old_class = self.current_class
             if line.find("scout.cfg") != -1:
                 self.current_class = TFClass.SCOUT
             elif line.find("soldier.cfg") != -1:
@@ -214,15 +252,83 @@ class TF2Context(CommonContext):
                 self.current_class = TFClass.SNIPER
             elif line.find("spy.cfg") != -1:
                 self.current_class = TFClass.SPY
-        elif line.find(self.steam_name) == 0:
+
+            if self.current_class != TFClass.UNKNOWN and self.current_class != old_class:
+                self.echo(f"Your class is: {self.current_class.tostr()}")
+        elif line.find(self.steam_name) != -1 and line.find(self.steam_name) != 0:
+            if not self.is_connected():
+                return
+
+            # death link
+            if line.find("killed") != -1 and line.find("with") != -1:
+                if "DeathLink" in self.tags:
+                    info: TFKillInfo = get_kill_info(line)
+                    if info.victim == self.steam_name:
+                        self.death_count += 1
+                        if self.death_count >= self.death_req:
+                            self.death_count = 0
+                            if info.weapon != "":
+                                line = line.replace(info.weapon_internal, info.weapon)
+                            Utils.async_start(self.send_death(line))
+        elif ((line.find(self.steam_name) == 0 or self.game_mode == TF2GameMode.MVM)
+         and self.game_mode != TF2GameMode.UNKNOWN):
             if not self.is_connected():
                 return
 
             if line.find("killed") != -1 and line.find("with") != -1:
                 info: TFKillInfo = get_kill_info(line)
-                sound_played_novice = False
-                sound_played_expert = False
-                if self.current_class != TFClass.UNKNOWN:
+                if self.is_mvm and self.game_mode == TF2GameMode.MVM:
+                    bot = info.victim
+                    # do a quick name fixup
+                    if bot == "Heavyweapons":
+                        bot = "Heavy"
+                    elif bot == "Heavy Shotgun":
+                        bot = "Shotgun Heavy"
+                    elif bot == "Extended Battalion Soldier":
+                        bot = "Battalion Soldier"
+                    elif bot == "Extended Buff Soldier":
+                        bot = "Buff Soldier"
+                    elif bot == "Extended Concheror Soldier":
+                        bot = "Concheror Soldier"
+                    elif bot == "Fast Scorch Shot" or bot == "Pyro Pusher":
+                        bot = "Flare Pyro"
+                    elif bot == "Minor League Scout" or bot == "Hyper League Scout":
+                        bot = "Sandman Scout"
+                    elif bot == "Steel Gauntlet Pusher":
+                        bot = "Steel Gauntlet"
+                    elif bot == "Razorback Sniper" or bot == "Sydney Sniper":
+                        bot = "Sniper"
+                    elif bot == "Giant Rapid Fire Demoman":
+                        bot = "Giant Demoman"
+
+                    req = self.mvm_kill_reqs.get(bot, 0)
+                    val = self.mvm_kill_counts.get(bot, 0)
+                    if req > 0 and val < req and self.has_bot_contract(bot):
+                        location_ids = []
+                        if bot not in self.mvm_boss_names:
+                            location_ids.append(self.mvm_location_ids[f"{bot} Kill #{val+1}"])
+                        else:
+                            for i in range(self.mvm_boss_reward):
+                                location_ids.append(self.mvm_location_ids[f"{bot} Reward #{i+1}"])
+
+                        Utils.async_start(self.send_msgs([{"cmd": "LocationChecks", "locations": location_ids}]))
+                        val += 1
+                        self.mvm_kill_counts[bot] = val
+                        key = format(f"MvmKillCount_{self.slot}_{bot}")
+                        Utils.async_start(self.send_msgs([{"cmd": "Set", "key": key,
+                                                           "operations": [
+                                                               {"operation": "replace", "value": val}]}]))
+                        if val >= req:
+                            self.echo(f"COMPLETED CONTRACT: {bot} Kills ({val}/{req})")
+                            self.play_gamesound("Quest.StatusTickExpert")
+                            self.add_contract_points(1)
+                        else:
+                            self.play_gamesound("Quest.StatusTickNovice")
+
+                        self.update_ui()
+
+                elif (line.find(self.steam_name) == 0
+                 and self.is_casual and self.game_mode == TF2GameMode.CASUAL and self.current_class != TFClass.UNKNOWN):
                     class_name = self.current_class.tostr()
                     if not self.has_item(class_name):
                         # player does not have this class, don't send any checks
@@ -243,7 +349,7 @@ class TF2Context(CommonContext):
                                                                    {"operation": "replace", "value": val}]}]))
 
                             if val >= req:
-                                self.echo(f"[ARCHIPELAGO] COMPLETED CONTRACT: Kills as {class_name} ({val}/{req})")
+                                self.echo(f"COMPLETED CONTRACT: Kills as {class_name} ({val}/{req})")
                                 self.play_gamesound("Quest.StatusTickExpert")
                                 self.add_contract_points(1)
                                 sound_played_expert = True
@@ -254,9 +360,7 @@ class TF2Context(CommonContext):
                             self.update_ui()
                 else:
                     for i in range(6):
-                        self.echo(
-                            "!!!!! Your class is unknown by the client. Switch classes OR type  'record 1' and then 'stop'  "
-                            "in the console to fix this. !!!!!")
+                        self.show_unknown_class_warning()
                     return
 
                 if info.weapon_internal == "bleed_kill":
@@ -293,11 +397,11 @@ class TF2Context(CommonContext):
                         val += 1
                         self.weapon_kill_counts[weapon] = val
                         key = format(f"WeaponCount_{self.slot}_{weapon}")
-                        Utils.async_start(self.send_msgs([{"cmd": "Set","key": key,
+                        Utils.async_start(self.send_msgs([{"cmd": "Set", "key": key,
                                                            "operations":[{"operation": "replace", "value": val}]}]))
 
                         if val >= req:
-                            self.echo(f"[ARCHIPELAGO] COMPLETED CONTRACT: Kills with {weapon} ({val}/{req})")
+                            self.echo(f"COMPLETED CONTRACT: Kills with {weapon} ({val}/{req})")
                             self.add_contract_points(1)
                             if not sound_played_expert:
                                 self.play_gamesound("Quest.StatusTickExpert")
@@ -306,17 +410,31 @@ class TF2Context(CommonContext):
                                 self.play_gamesound("Quest.StatusTickNovice")
 
                         self.update_ui()
-        elif line.find(self.steam_name) != -1:
-            if line.find("killed") != -1 and line.find("with") != -1:
-                if "DeathLink" in self.tags:
-                    info: TFKillInfo = get_kill_info(line)
-                    if info.victim == self.steam_name:
-                        self.death_count += 1
-                        if self.death_count >= self.death_req:
-                            self.death_count = 0
-                            if info.weapon != "":
-                                line = line.replace(info.weapon_internal, info.weapon)
-                            Utils.async_start(self.send_death(line))
+        else:
+            start = line.find("map     : ") + 10
+            end = line.find(" at: ")
+            if start != -1 and end != -1:
+                map_name = line[start:end]
+                old_mode = self.game_mode
+                if map_name.find("mvm_") == 0:
+                    self.game_mode = TF2GameMode.MVM
+                else:
+                    self.game_mode = TF2GameMode.CASUAL
+
+                if self.game_mode != old_mode:
+                    if self.game_mode == TF2GameMode.MVM:
+                        logger.info(f"Game Mode changed to: Mann vs. Machine")
+                    elif self.game_mode == TF2GameMode.CASUAL:
+                        logger.info(f"Game Mode changed to: Casual")
+                    else:
+                        logger.info(f"Game Mode changed to: Unknown")
+
+    def show_unknown_class_warning(self):
+        if self.game_mode == TF2GameMode.MVM:
+            return
+
+        self.echo("!!! Your current player class is unknown by the Archipelago client. "
+                  "If you are in-game, swap to a different class to fix this issue.!!!")
 
     def play_sound(self, sound: str):
         self.cmd_queue.append(TF2Cmd(cmd='play', args=sound))
@@ -325,7 +443,9 @@ class TF2Context(CommonContext):
         self.cmd_queue.append(TF2Cmd(cmd='playgamesound', args=sound))
 
     def update_ui(self):
-        if self.current_class != TFClass.UNKNOWN:
+        if self.game_mode == TF2GameMode.MVM and self.is_mvm:
+            self.ui.show_bundle(self.current_mvm_bundle)
+        elif self.current_class != TFClass.UNKNOWN and self.is_casual:
             self.ui.show_weapon_grid(self.current_class.tostr())
         else:
             self.ui.update_tf2_tab()
@@ -335,19 +455,64 @@ class TF2Context(CommonContext):
             return
 
         self.points += amount
-        self.echo(f"[ARCHIPELAGO] Contract Points: {self.points}/{self.required_points}")
+        self.echo(f"Contract Points: {self.points}/{self.required_points}")
         Utils.async_start(self.send_msgs([{"cmd": "Set", "key": f"ContractPoints_{self.slot}",
                                            "operations": [{"operation": "replace", "value": self.points}]}]))
 
         if self.points >= self.required_points:
             Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
-            self.echo("[ARCHIPELAGO] ********* CONGRATULATIONS! You're finished! ********")
+            self.echo("********* CONGRATULATIONS! You're finished! ********")
             self.play_gamesound("Game.HappyBirthday")
 
     def cleanup(self):
         self.rcon_password = ""
         self.rcon = None
         self.current_class = TFClass.UNKNOWN
+        self.game_mode = TF2GameMode.UNKNOWN
+
+    def has_bot_contract(self, bot: str) -> bool:
+        for key, val in self.mvm_bundles.items():
+            if not self.has_item(key):
+                continue
+
+            for b in val:
+                if bot == b:
+                    return True
+
+        return False
+
+    def get_bot_bundle_name(self, bot: str) -> str:
+        for key, val in self.mvm_bundles.items():
+            for b in val:
+                if bot == b:
+                    return key
+
+        return "UNKNOWN"
+
+    def mvm_has_any_pending_objectives(self) -> bool:
+        for key, val in self.mvm_bundles.items():
+            if not self.has_item(key):
+                continue
+
+            for bot in val:
+                count = self.mvm_kill_counts.get(bot, 0)
+                req = self.mvm_kill_reqs[bot]
+                if count < req:
+                    return True
+
+        return False
+
+    def mvm_bundle_has_pending_objectives(self, bundle: str) -> bool:
+        if not self.has_item(bundle):
+            return False
+
+        for bot in self.mvm_bundles[bundle]:
+            count = self.mvm_kill_counts.get(bot, 0)
+            req = self.mvm_kill_reqs[bot]
+            if count < req:
+                return True
+
+        return False
 
     def class_has_pending_objectives(self, class_name: str) -> bool:
         class_kills = self.class_kill_counts.get(class_name, 0)
@@ -365,7 +530,7 @@ class TF2Context(CommonContext):
 
     def on_print_json(self, args: dict):
         text = self.gamejsontotext(deepcopy(args["data"]))
-        self.echo(text, 10)
+        self.echo(text)
 
         if self.ui:
             self.ui.print_json(args["data"])
@@ -373,33 +538,61 @@ class TF2Context(CommonContext):
             text = self.jsontotextparser(args["data"])
             logger.info(text)
 
-    def echo(self, text: str, delay=1):
-        self.cmd_queue.append(TF2Cmd(f"wait {delay}; con_filter_enable", "0"))
-        self.cmd_queue.append(TF2Cmd(f"wait {delay}; echo", text))
-        self.cmd_queue.append(TF2Cmd(f"wait {delay+1}; con_filter_enable", "1"))
+    def echo(self, text: str):
+        for cmd in self.cmd_queue:
+            if cmd.is_confilter:
+                self.cmd_queue.remove(cmd)
+
+        self.cmd_queue.append(TF2Cmd(f"con_filter_text \"\""))
+        self.cmd_queue.append(TF2Cmd(f"wait 5; echo", f"\"[ARCHIPELAGO] {text}\""))
+        self.cmd_queue.append(TF2Cmd(f"wait 6; con_filter_text brwetghrweuifwiuffew", is_confilter=True))
 
     def on_package(self, cmd: str, args: dict):
         if cmd == "Connected":
             self.slot_data = args["slot_data"]
-            self.weapon_kill_reqs = self.slot_data["WeaponKillCounts"]
-            self.class_kill_reqs = self.slot_data["ClassKillCounts"]
+            self.is_casual = self.slot_data["IsCasual"]
+            self.is_mvm = self.slot_data["IsMvm"]
+            if self.is_casual:
+                self.weapon_kill_reqs = self.slot_data["WeaponKillCounts"]
+                self.class_kill_reqs = self.slot_data["ClassKillCounts"]
+
+            if self.is_mvm:
+                self.mvm_bundles = self.slot_data["MvmBundles"]
+                self.mvm_kill_reqs = self.slot_data["MvmKillCounts"]
+                self.mvm_location_ids = self.slot_data["MvmLocationIds"]
+                self.mvm_boss_names = self.slot_data["MvmBossNames"]
+                self.mvm_boss_reward = self.slot_data["MvmContractBossReward"]
+
             self.required_points = self.slot_data["RequiredContractPoints"]
             self.death_req = self.slot_data["DeathLinkAmnesty"]
             if self.slot_data["DeathLink"] is True and "DeathLink" not in self.tags:
                 Utils.async_start(self.update_death_link(True))
 
             get_list = []
-            for key in self.class_kill_reqs.keys():
-                get_list.append(f"ClassCount_{self.slot}_{key}")
+            notify_list = []
+            if self.is_casual:
+                for key in self.class_kill_reqs.keys():
+                    get_list.append(f"ClassCount_{self.slot}_{key}")
+                    notify_list.append(f"ClassCount_{self.slot}_{key}")
 
-            for key in self.weapon_kill_reqs.keys():
-                get_list.append(f"WeaponCount_{self.slot}_{key}")
+                for key in self.weapon_kill_reqs.keys():
+                    get_list.append(f"WeaponCount_{self.slot}_{key}")
+                    notify_list.append(f"WeaponCount_{self.slot}_{key}")
+
+            if self.is_mvm:
+                for key in self.mvm_kill_reqs.keys():
+                    get_list.append(f"MvmKillCount_{self.slot}_{key}")
+                    notify_list.append(f"MvmKillCount_{self.slot}_{key}")
 
             get_list.append(f"ContractPoints_{self.slot}")
+            notify_list.append(f"ContractPoints_{self.slot}")
             get_list.append(f"ContractHints_{self.slot}")
             if DEBUG:
                 logger.info(f"Get: {get_list}")
+                logger.info(f"SetNotify: {notify_list}")
+
             Utils.async_start(self.send_msgs([{"cmd": "Get","keys": get_list}]))
+            Utils.async_start(self.send_msgs([{"cmd": "SetNotify","keys": notify_list}]))
             self.update_ui()
             logger.info("\n********************************************************************"
                         "\nTo connect to TF2 RCON: "
@@ -407,30 +600,9 @@ class TF2Context(CommonContext):
                         "\n2. In-game, make sure that the rcon_password convar in the console is set to something"
                         "\n3. Enter /tf2_connect <password> in this client. The password should be whatever rcon_password is."
                         "\n\nIf connecting to the RCON fails, you may not be running the game with the -usercon launch option."
+                        "\n\nOnce you are connected to TF2, the RCON connection may time out while on the loading screen. THIS IS NORMAL!"
+                        "\nIt should reconnect automatically once you're finished loading in."
                         "\n********************************************************************\n")
-        elif cmd == "Retrieved":
-            for key, val in args["keys"].items():
-                if DEBUG:
-                    logger.info(f"Retrieved: {key} = {val}")
-
-                if key.startswith("WeaponCount_"):
-                    if val is None:
-                        continue
-
-                    key = key.replace(f"WeaponCount_{self.slot}_", "")
-                    self.weapon_kill_counts[key] = val
-                elif key.startswith("ClassCount_"):
-                    if val is None:
-                        continue
-
-                    key = key.replace(f"ClassCount_{self.slot}_", "")
-                    self.class_kill_counts[key] = val
-                elif key.startswith("ContractPoints") and val is not None:
-                    self.points = val
-                elif key.startswith("ContractHints") and val is not None:
-                    self.contract_hints = val
-
-            self.update_ui()
         elif cmd == "ReceivedItems":
             start_index = args["index"]
             if start_index == 0:
@@ -439,6 +611,7 @@ class TF2Context(CommonContext):
             progression = False
             new_class = False
             paranoia = False
+            mvm_bundle = False
             if start_index <= len(self.items_received):
                 for i in args['items']:
                     if i.item == 50: # Contract Hint
@@ -456,8 +629,9 @@ class TF2Context(CommonContext):
                     elif i.item == 56: # Melee Only Trap
                         self.melee_only_duration = 30
                     elif i.item <= 9:
-                        # new class
                         new_class = True
+                    elif i.item >= 950000:
+                        mvm_bundle = True
                     else:
                         # assume progression, probably a weapon
                         progression = True
@@ -468,19 +642,96 @@ class TF2Context(CommonContext):
             elif new_class:
                 self.cmd_queue.append(TF2Cmd("wait", "8"))
                 self.play_sound("ui/duel_challenge_accepted.wav")
+            elif mvm_bundle:
+                self.cmd_queue.append(TF2Cmd("wait", "8"))
+                self.play_gamesound("MVM.Warning")
             elif progression:
                 self.cmd_queue.append(TF2Cmd("wait", "4"))
                 self.play_gamesound("BaseCombatWeapon.WeaponMaterialize")
 
             self.update_ui()
+        elif cmd == "Retrieved" or cmd == "SetReply":
+            if cmd == "SetReply":
+                key = args["key"]
+                if "_read_client" in key or "_read_hints" in key:
+                    return
+
+                val = args["value"]
+                old_val = args["original_value"]
+                slot = args["slot"]
+                if DEBUG:
+                    logger.info(f"SetReply: {key} = {val} (old value: {old_val}, slot: {slot})")
+
+                if val <= old_val or slot == self.slot:
+                    return
+
+                self.update_retrieved_data(key, val, True)
+            else:
+                for key, val in args["keys"].items():
+                    if DEBUG:
+                        logger.info(f"Retrieved: {key} = {val}")
+
+                    self.update_retrieved_data(key, val)
+
+            self.update_ui()
+
+    def update_retrieved_data(self, key: str, val: Any, play_sound: bool=False):
+        if val is None:
+            return
+
+        if key.startswith("WeaponCount_"):
+            key = key.replace(f"WeaponCount_{self.slot}_", "")
+            self.weapon_kill_counts[key] = val
+            if play_sound:
+                # someone in the same slot got a kill - play sounds to others
+                req = self.weapon_kill_reqs.get(key, 0)
+                if val >= req:
+                    self.echo(f"COMPLETED CONTRACT: Kills with {key} ({val}/{req})")
+                    self.play_gamesound("Quest.StatusTickExpert")
+                else:
+                    self.play_gamesound("Quest.StatusTickNovice")
+        elif key.startswith("ClassCount_"):
+            key = key.replace(f"ClassCount_{self.slot}_", "")
+            self.class_kill_counts[key] = val
+            if play_sound:
+                # someone in the same slot got a kill - play sounds to others
+                req = self.class_kill_reqs.get(key, 0)
+                if val >= req:
+                    self.echo(f"COMPLETED CONTRACT: Kills as {key} ({val}/{req})")
+                    self.play_gamesound("Quest.StatusTickExpert")
+                else:
+                    self.play_gamesound("Quest.StatusTickNovice")
+        elif key.startswith("MvmKillCount_"):
+            key = key.replace(f"MvmKillCount_{self.slot}_", "")
+            self.mvm_kill_counts[key] = val
+            if play_sound:
+                # someone in the same slot got a kill - play sounds to others
+                req = self.mvm_kill_reqs.get(key, 0)
+                if val >= req:
+                    self.echo(f"COMPLETED CONTRACT: {key} Kills ({val}/{req})")
+                    self.play_gamesound("Quest.StatusTickExpert")
+                else:
+                    self.play_gamesound("Quest.StatusTickNovice")
+        elif key.startswith("ContractPoints"):
+            self.points = val
+        elif key.startswith("ContractHints"):
+            self.contract_hints = val
 
     def give_contract_hint(self):
         possible_hints = []
-        for weapon in self.weapon_kill_reqs.keys():
-            if weapon in self.contract_hints or self.has_item(weapon):
-                continue
+        if self.is_casual:
+            for weapon in self.weapon_kill_reqs.keys():
+                if weapon in self.contract_hints or self.has_item(weapon):
+                    continue
 
-            possible_hints.append(weapon)
+                possible_hints.append(weapon)
+
+        if self.is_mvm:
+            for bot in self.mvm_kill_reqs.keys():
+                if bot in self.contract_hints or self.has_bot_contract(bot):
+                    continue
+
+                possible_hints.append(bot)
 
         if len(possible_hints) <= 0:
             return
@@ -489,6 +740,10 @@ class TF2Context(CommonContext):
         self.contract_hints.append(hint)
         Utils.async_start(self.send_msgs([{"cmd": "Set", "key": f"ContractHints_{self.slot}", "default": [],
                                            "operations": [{"operation": "add", "value": [hint]}]}]))
+
+        bundle_name = self.get_bot_bundle_name(hint)
+        if bundle_name != "UNKNOWN":
+            hint += f" ({bundle_name})"
 
         logger.info(f"Contract revealed: {hint}")
         self.echo(f"Contract revealed: {hint}")
@@ -519,6 +774,9 @@ async def rcon_loop(ctx: TF2Context):
                             file.truncate(0)
 
                     while True:
+                        if ctx.exit_event.is_set():
+                            break
+
                         if ctx.steam_name == "":
                             name = ctx.rcon.command("name")
                             name = name.replace("\"name\" = ", "")
@@ -527,20 +785,28 @@ async def rcon_loop(ctx: TF2Context):
                             ctx.steam_name = name
                             ctx.class_check_time = 0
                             logger.info(f"Your name is: {ctx.steam_name}")
+
                         if ctx.current_class == TFClass.UNKNOWN:
-                            # this forces class configs to execute, so we can see what class the player is playing
-                            # after a reconnect
                             ctx.class_check_time -= 0.1
-                            if ctx.class_check_time <= 0: # don't do this too often to prevent mass lag
-                                ctx.rcon.command("record ap_dummy; stop")
-                                ctx.class_check_time = 8.0
+                            if ctx.class_check_time <= 0:
+                                ctx.show_unknown_class_warning()
+                                ctx.class_check_time = 30.0
+
+                        ctx.mode_check_time -= 0.1
+                        if ctx.mode_check_time <= 0:
+                            ctx.rcon.command("wait 1; status")
+                            ctx.mode_check_time = 5.0
+
                         if len(ctx.cmd_queue) > 0:
                             for c in ctx.cmd_queue:
                                 ctx.rcon.command(c.cmd, c.args)
+                                await asyncio.sleep(0.06) # don't send commands too fast or some may get dropped
                             ctx.cmd_queue.clear()
+
                         if ctx.taunt_trap_duration > 0:
                             ctx.rcon.command("taunt")
                             ctx.taunt_trap_duration -= 0.1
+
                         if ctx.melee_only_duration > 0:
                             ctx.rcon.command("slot3")
                             ctx.melee_only_duration -= 0.1
@@ -560,9 +826,13 @@ async def rcon_loop(ctx: TF2Context):
                 ctx.cleanup()
             except Exception as e:
                 logger.info(f"TF2 RCON Connection failed or aborted ({e})")
-                logger.info("Attempting to connect again in 5 seconds...")
                 ctx.rcon = None
-                await asyncio.sleep(5)
+                ctx.condump_io = None
+                if not isinstance(e, BadRCONPassword):
+                    logger.info("Attempting to connect again in 10 seconds...")
+                    await asyncio.sleep(10)
+                else:
+                    ctx.rcon_password = ""
 
         await asyncio.sleep(0.1)
 
@@ -584,28 +854,140 @@ class TF2Manager(GameManager):
         self.update_tf2_tab()
         return self.container
 
-    def update_tf2_tab(self):
+    def update_tf2_tab(self, hide_buttons=False):
         self.tf2_tab.content.clear_widgets()
-        self.tf2_tab.content.cols = len(self.ctx.class_kill_reqs)
+        self.tf2_tab.content.cols = 0
+        if hide_buttons:
+            return
+
+        if self.ctx.is_casual:
+            self.tf2_tab.content.cols += len(self.ctx.class_kill_reqs)
+
+        if self.ctx.is_mvm:
+            self.tf2_tab.content.cols += 1
+
         if not self.ctx.is_connected():
             return
 
-        for class_name in self.ctx.class_kill_reqs.keys():
-            has_class = self.ctx.has_item(class_name)
+        if self.ctx.is_casual:
+            for class_name in self.ctx.class_kill_reqs.keys():
+                has_class = self.ctx.has_item(class_name)
+                clr = (1, 1, 1, 1)
+                if not has_class:
+                    clr = (1, 1, 1, 0.4)
+                elif self.ctx.class_has_pending_objectives(class_name):
+                    clr = (0.3, 1, 1, 1)
+
+                display = class_name
+                button = Button(text=display, size_hint_y=None, height=50, width=100, color=clr)
+                if has_class:
+                    button.bind(on_release=lambda press, cls=class_name: self.show_weapon_grid(cls))
+
+                self.tf2_tab.content.add_widget(button)
+
+        if self.ctx.is_mvm:
             clr = (1, 1, 1, 1)
-            if not has_class:
-                clr = (1, 1, 1, 0.4)
-            elif self.ctx.class_has_pending_objectives(class_name):
+            if self.ctx.mvm_has_any_pending_objectives():
                 clr = (0.3, 1, 1, 1)
 
-            button = Button(text=class_name, size_hint_y=None, height=50, width=100, color=clr)
-            if has_class:
-                button.bind(on_release=lambda press, cls=class_name: self.show_weapon_grid(cls))
-
+            button = Button(text="MvM", size_hint_y=None, height=50, width=100, color=clr)
+            button.bind(on_release=lambda press: self.show_mvm_grid())
             self.tf2_tab.content.add_widget(button)
 
-    def show_weapon_grid(self, class_name: str):
+    def show_mvm_grid(self):
         self.update_tf2_tab()
+        if not self.ctx.is_mvm:
+            self.ctx.ui_mode = TF2UIMode.UNKNOWN
+            return
+
+        self.ctx.ui_mode = TF2UIMode.MVM_GRID
+        grid = GridLayout(cols=5, size_hint_y=None, col_default_width=150,
+                          row_default_height=60)
+
+        grid.add_widget(Label(text=f"Contract Points: {self.ctx.points}/{self.ctx.required_points}", size_hint_y=None,
+                              color=(0.5, 0.5, 1, 1)))
+
+        btn = Button(text='Show All Contracts', size_hint_y=None, height=40)
+        btn.bind(on_release=lambda press: self.show_bundle(""))
+        grid.add_widget(btn)
+        for bundle in self.ctx.mvm_bundles.keys():
+            number = int(bundle[-1])
+            clr: tuple
+            if not self.ctx.has_item(bundle):
+                clr = (1, 1, 1, 0.4)
+            elif self.ctx.mvm_bundle_has_pending_objectives(bundle):
+                clr = (0.3, 1, 1, 1)
+            else:
+                clr = (0.2, 1, 0.2, 1)
+
+            btn = Button(text=f'Bundle #{number}', size_hint_y=None, height=40, color=clr)
+            if self.ctx.has_item(bundle):
+                btn.bind(on_release=lambda press, b=bundle: self.show_bundle(b))
+
+            grid.add_widget(btn)
+
+        self.tf2_tab.content.add_widget(grid)
+
+    def show_bundle(self, bundle: str):
+        self.update_tf2_tab()
+
+        if not self.ctx.is_mvm or (bundle != "" and bundle not in self.ctx.mvm_bundles):
+            self.ctx.ui_mode = TF2UIMode.UNKNOWN
+            return
+
+        self.ctx.current_mvm_bundle = bundle
+        self.ctx.ui_mode = TF2UIMode.MVM_BUNDLE
+        grid = GridLayout(cols=4, size_hint_y=None, col_default_width=200,row_default_height=60)
+        grid.add_widget(Label(text=f"Contract Points: {self.ctx.points}/{self.ctx.required_points}", size_hint_y=None,
+                              color=(0.5, 0.5, 1, 1)))
+
+        grid.bind(minimum_height=grid.setter('height'))
+        grid.bind(minimum_width=grid.setter('width'))
+        scroll = ScrollView(size_hint=(None, None), size=(Window.width, Window.height))
+        if bundle == "":
+            btn = Button(text=f'Showing All\nGo Back', size_hint=(-0.25, -0.25))
+        else:
+            number = int(bundle[-1])
+            btn = Button(text=f'Bundle #{number}\nGo Back', size_hint=(-0.25, -0.25))
+
+        btn.bind(on_release=lambda press: self.show_mvm_grid())
+        grid.add_widget(btn)
+        bot_list = []
+        if bundle != "":
+            bot_list = list(self.ctx.mvm_bundles[bundle])
+        else:
+            for key, val in self.ctx.mvm_bundles.items():
+                if self.ctx.has_item(key):
+                    for bot in val:
+                        bot_list.append(bot)
+
+        for bot in bot_list:
+            count = self.ctx.mvm_kill_counts.get(bot, 0)
+            req = self.ctx.mvm_kill_reqs[bot]
+            clr = (1, 1, 1, 1)
+            if count > 0 and count < req:
+                clr = (1, 1, 0.5, 1)
+            elif count >= req:
+                clr = (0.2, 1, 0.2, 1)
+
+            text = f"{bot}\n{count}/{req}"
+            grid.add_widget(Label(text=text, size_hint_y=None, color=clr))
+
+        scroll.add_widget(grid)
+
+        # FIXME: Somehow the scrollview stretches the first button widget?????? Kivy sucks ass.
+        self.tf2_tab.content.add_widget(scroll, True)
+
+    def show_weapon_grid(self, class_name: str):
+        if not self.ctx.has_item(class_name):
+            return
+
+        self.update_tf2_tab()
+        if not self.ctx.is_casual or class_name not in self.ctx.class_kill_reqs.keys():
+            self.ctx.ui_mode = TF2UIMode.UNKNOWN
+            return
+
+        self.ctx.ui_mode = TF2UIMode.VIEWING_CLASS
         grid = GridLayout(cols=5, size_hint_y=None, col_default_width=150, col_force_default=True,
                           row_default_height=80, row_force_default=True)
 
@@ -646,6 +1028,7 @@ def launch():
         ctx.rcon_task = asyncio.create_task(rcon_loop(ctx), name="RCONLoop")
         await ctx.rcon_task
         await ctx.exit_event.wait()
+        await ctx.shutdown()
 
     Utils.init_logging("TF2Client")
     # options = Utils.get_options()

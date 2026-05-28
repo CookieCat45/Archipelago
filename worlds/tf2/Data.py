@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import NamedTuple, Optional, TYPE_CHECKING
+from typing import NamedTuple, Optional, TYPE_CHECKING, List
 from BaseClasses import Item, ItemClassification, Location
 
 if TYPE_CHECKING:
@@ -84,11 +84,12 @@ def get_kill_info(kill_string: str) -> TFKillInfo:
     kill_info.victim = victim_name
     kill_info.crit = crit
 
+    print("Kill Detected:")
     print("Weapon:", kill_info.weapon,
-          " | Weapon (Internal):", kill_info.weapon_internal,
-          " | Attacker:", kill_info.attacker,
-          " | Victim:", kill_info.victim,
-          " | Crit:", kill_info.crit)
+          "| Weapon (Internal):", kill_info.weapon_internal,
+          "| Attacker:", kill_info.attacker,
+          "| Victim:", kill_info.victim,
+          "| Crit:", kill_info.crit)
 
     return kill_info
 
@@ -484,3 +485,11 @@ _init_weapon_to_class()
 
 def class_uses_weapon(class_name: str, weapon: str) -> bool:
     return weapon_to_class.get(weapon) == class_name or weapon in multi_class_weapon_lists[class_name]
+
+def get_multiclass_weapon_classes(weapon: str) -> List:
+    class_list = []
+    for c, wl in multi_class_weapon_lists.items():
+        if weapon in wl:
+            class_list.append(c)
+
+    return class_list
