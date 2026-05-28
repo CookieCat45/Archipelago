@@ -129,10 +129,10 @@ class TF2World(World):
 
     def write_spoiler(self, spoiler_handle: TextIO):
         spoiler_handle.write(f"Total Objectives: {self.total_objectives}\n")
-        spoiler_handle.write(f"Contract Points Required: {self.get_required_contract_points()}")
+        spoiler_handle.write(f"Contract Points Required: {self.get_required_contract_points()}\n")
         spoiler_handle.write(f"Total Weapons: {len(self.available_weapons)}\n")
         if self.is_mvm_enabled():
-            spoiler_handle.write(f"MvM Contract Bundles: {self.mvm_bundles}")
+            spoiler_handle.write(f"MvM Contract Bundles: {self.mvm_bundles}\n")
 
     def get_required_contract_points(self) -> int:
         return floor(self.total_objectives * (self.options.ContractPointRequirement/100))
