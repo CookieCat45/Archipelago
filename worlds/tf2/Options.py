@@ -259,13 +259,12 @@ class MvmCommonBotWhitelist(OptionDict):
         "Uber Medic": 50,
         "Quick-Fix Medic": 50,
         "Sandman Scout": 50,
-        "Buff Banner Soldier": 50,
+        "Buff Soldier": 50,
         "Concheror Soldier": 50,
         "Flare Pyro": 50,
         "Demoknight": 50,
         "Steel Gauntlet": 50,
         "Heavyweight Champ": 50,
-        "Fast Heavyweight Champ": 50,
         "Bowman": 50,
     }
 
