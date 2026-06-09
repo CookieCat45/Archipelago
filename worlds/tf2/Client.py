@@ -276,6 +276,8 @@ class TF2Context(CommonContext):
                 return
 
             if line.find("killed") != -1 and line.find("with") != -1:
+                sound_played_novice = False
+                sound_played_expert = False
                 info: TFKillInfo = get_kill_info(line)
                 if self.is_mvm and self.game_mode == TF2GameMode.MVM:
                     bot = info.victim
