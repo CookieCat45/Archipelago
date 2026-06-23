@@ -21,6 +21,17 @@ class Sonic3AIRWorld(World):
         self.total_locations = 0
         self.zones_available = []
         self.starting_zone = ""
+        self.starting_character = "Sonic"
+
+    def generate_early(self) -> None:
+        if self.options.StartingCharacter == self.options.StartingCharacter.option_sonic:
+            self.starting_character = "Sonic"
+        elif self.options.StartingCharacter == self.options.StartingCharacter.option_tails:
+            self.starting_character = "Tails"
+        elif self.options.StartingCharacter == self.options.StartingCharacter.option_knuckles:
+            self.starting_character = "Knuckles"
+
+        self.multiworld.push_precollected(self.create_item(self.starting_character))
 
     def create_regions(self):
         init_regions(self)

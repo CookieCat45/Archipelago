@@ -5,6 +5,13 @@ from worlds.AutoWorld import PerGameCommonOptions
 from Options import Range, Toggle, DeathLink, Choice, OptionList, DefaultOnToggle, OptionGroup, StartInventoryPool
 
 
+class StartingCharacter(Choice):
+    """The character that you will start the game with."""
+    option_sonic = 0
+    option_tails = 1
+    option_knuckles = 2
+
+
 class ZoneUnlockMode(Choice):
     """Determines how zone unlocking works.
     linear: Zones are unlocked in the vanilla order through a progressive item. You start with Angel Island Zone.
@@ -15,7 +22,6 @@ class ZoneUnlockMode(Choice):
     option_linear = 0
     option_shuffled = 1
     option_shuffled_deathegg = 2
-    default = 0
 
 
 class ZoneCount(Range):
@@ -67,19 +73,39 @@ class ShuffleGiantRings(DefaultOnToggle):
 
 class SpecialStageUnlockItemCount(Range):
     """Shuffles a specified number of items into the pool that unlock access to Special Stages.
-    0 will disable this, meaning all 14 Special Stages will accessible from the start."""
+    A value of 0 will prevent Special Stages from being accessible at all."""
     range_start = 0
     range_end = 14
-    default = 0
+
+
+class SpecialStageSphereChecks(Range):
+    """Adds checks to Special Stages that are cleared by collecting certain amounts of blue spheres.
+    The value of this option determines the percentage of spheres that are necessary to complete a check.
+    For example, if the value is 2:
+    2 / 10 = 0.2 (every 20% of spheres collected in a stage)."""
+    range_start = 0
+    range_end = 10
+
+
+class SpecialStageRingChecks(Range):
+    """Adds checks to Special Stages that are cleared by collecting certain amounts of rings.
+    The value of this option determines the percentage of rings that are necessary to complete a check.
+    For example, if the value is 2:
+    2 / 10 = 0.2 (every 20% of rings collected in a stage)."""
+    range_start = 0
+    range_end = 10
 
 
 @dataclass
 class Sonic3AIROptions(PerGameCommonOptions):
+    StartingCharacter: StartingCharacter
     ZoneUnlockMode: ZoneUnlockMode
     ZoneCount: ZoneCount
     ZonesAllowed: ZonesAllowed
     Goal: Goal
     ShuffleGiantRings: ShuffleGiantRings
     SpecialStageUnlockItemCount: SpecialStageUnlockItemCount
+    SpecialStageSphereChecks: SpecialStageSphereChecks
+    SpecialStageRingChecks: SpecialStageRingChecks
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink

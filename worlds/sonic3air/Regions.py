@@ -31,8 +31,43 @@ single_act_zones = [
     "Doomsday Zone"
 ]
 
+no_giantring_zones = [
+    "Sky Sanctuary Zone",
+    "Hidden Palace Zone",
+    "Death Egg Zone",
+    "Doomsday Zone"
+]
+
 def init_regions(world: "Sonic3AIRWorld"):
     menu = create_region(world, "Menu")
+    special_stage_region = None
+    if world.options.SpecialStageUnlockItemCount > 0:
+        special_stage_region = create_region(world, "Special Stages")
+        sphere_loc_id = 1
+        ring_loc_id = 2
+        sphere_count = 10 / world.options.SpecialStageSphereChecks
+        ring_count = 10 / world.options.SpecialStageRingChecks
+        for i in range(world.options.SpecialStageUnlockItemCount):
+            special_stage = create_region_and_connect(world, f"Special Stage {i+1}",
+                                                      f"-> Special Stage{i+1}", special_stage_region)
+            if sphere_count > 0:
+                increment = 10 / sphere_count
+                for a in range(sphere_count):
+                    loc_name = f"Special Stage {i+1}: {(a+1)*increment}% Blue Spheres"
+                    location = Sonic3AIRLocation(world.player, loc_name, sphere_loc_id, special_stage)
+                    special_stage.locations.append(location)
+                    world.total_locations += 1
+                    sphere_loc_id += 2
+
+            if ring_count > 0:
+                increment = 10 / ring_count
+                for a in range(ring_count):
+                    loc_name = f"Special Stage {i + 1}: {(a+1)*increment}% Rings"
+                    location = Sonic3AIRLocation(world.player, loc_name, ring_loc_id, special_stage)
+                    special_stage.locations.append(location)
+                    world.total_locations += 1
+                    ring_loc_id += 2
+
     if world.options.ZoneUnlockMode.value == 0:
         # linear mode
         world.zones_available = zones
@@ -60,6 +95,9 @@ def init_regions(world: "Sonic3AIRWorld"):
     world.random.shuffle(world.zones_available)
     for zone in world.zones_available:
         zone_region = create_region_and_connect(world, zone, f"{zone} Entrance", menu)
+        if special_stage_region is not None and zone not in no_giantring_zones:
+            zone_region.connect(special_stage_region, f"{zone} -> Special Stages")
+
         if zone not in single_act_zones:
             create_region_and_connect(world, f"{zone}: Act 1", f"{zone}: Act 1 Entrance", zone_region)
             create_region_and_connect(world, f"{zone}: Act 2", f"{zone}: Act 2 Entrance", zone_region)

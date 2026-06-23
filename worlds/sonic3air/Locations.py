@@ -1,5 +1,6 @@
 from .Types import LocData
 from typing import Dict
+from .Options import SpecialStageSphereChecks, SpecialStageRingChecks
 
 location_table = {
     "Angel Island Zone: Act 1 - Giant Ring (First Area, Behind Rock Wall)":
@@ -16,4 +17,11 @@ location_table = {
 
 def get_location_names() -> Dict[str, int]:
     names = {name: data.id for name, data in location_table.items()}
+    loc_id = 1
+    for i in range(14):
+        for a in range(10):
+            names[f"Special Stage {i+1}: {(a+1)*10}% Blue Spheres"] = loc_id
+            names[f"Special Stage {i+1}: {(a+1)*10}% Rings"] = loc_id+1
+            loc_id += 2
+
     return names

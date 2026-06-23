@@ -47,29 +47,31 @@ item_table = {
 
 def fill_itempool(world: "Sonic3AIRWorld"):
     item_count = 0
-    zone_unlock_mode = world.options.ZoneUnlockMode.value
+    zone_unlock_mode = world.options.ZoneUnlockMode
     for item, data in item_table.items():
         if data.classification == ItemClassification.filler:
             continue
 
         if item.startswith("Zone Unlock: "):
-            if zone_unlock_mode == 0:
+            if zone_unlock_mode == zone_unlock_mode.option_linear:
                 continue
 
             zone: str = item[len("Zone Unlock: ")-1:]
             if zone == world.starting_zone:
                 continue
 
-            if zone_unlock_mode != 2 and zone == "Death Egg Zone":
+            if zone_unlock_mode != zone_unlock_mode.option_shuffled_deathegg and zone == "Death Egg Zone":
                 continue
 
             if zone not in world.zones_available:
                 continue
 
-        if zone_unlock_mode != 0 and item == "Progressive Zone Unlock":
+        if zone_unlock_mode != zone_unlock_mode.option_linear and item == "Progressive Zone Unlock":
             continue
 
-        for i in range(get_item_count(world, item)):
+        count = get_item_count(world, item)
+        item_count += count
+        for i in range(count):
             world.multiworld.itempool.append(create_item(world, item))
 
     for i in range(world.total_locations - item_count):
@@ -80,6 +82,8 @@ def fill_itempool(world: "Sonic3AIRWorld"):
 def get_item_count(world: "Sonic3AIRWorld", item: str) -> int:
     if item == "Progressive Zone Unlock":
         return len(world.zones_available)-1
+    elif item == "Progressive Special Stage Unlock":
+        return world.options.SpecialStageUnlockItemCount.value
 
     return 1
 
