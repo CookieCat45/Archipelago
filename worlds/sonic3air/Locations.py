@@ -20,8 +20,10 @@ def get_location_names() -> Dict[str, int]:
     loc_id = 1
     for i in range(14):
         for a in range(10):
-            names[f"Special Stage {i+1}: {(a+1)*10}% Blue Spheres"] = loc_id
-            names[f"Special Stage {i+1}: {(a+1)*10}% Rings"] = loc_id+1
+            blue_name = f"Special Stage {i+1}: {(a+1)*10}% Blue Spheres"
+            ring_name = f"Special Stage {i+1}: {(a+1)*10}% Rings"
+            names[blue_name] = loc_id
+            names[ring_name] = loc_id+1
             loc_id += 2
 
     return names

@@ -45,24 +45,24 @@ def init_regions(world: "Sonic3AIRWorld"):
         special_stage_region = create_region(world, "Special Stages")
         sphere_loc_id = 1
         ring_loc_id = 2
-        sphere_count = 10 / world.options.SpecialStageSphereChecks
-        ring_count = 10 / world.options.SpecialStageRingChecks
+        sphere_count = 10 // world.options.SpecialStageSphereChecks
+        ring_count = 10 // world.options.SpecialStageRingChecks
         for i in range(world.options.SpecialStageUnlockItemCount):
             special_stage = create_region_and_connect(world, f"Special Stage {i+1}",
                                                       f"-> Special Stage{i+1}", special_stage_region)
             if sphere_count > 0:
-                increment = 10 / sphere_count
+                increment = 10 // sphere_count
                 for a in range(sphere_count):
-                    loc_name = f"Special Stage {i+1}: {(a+1)*increment}% Blue Spheres"
+                    loc_name = f"Special Stage {i+1}: {(a+1)*increment}0% Blue Spheres"
                     location = Sonic3AIRLocation(world.player, loc_name, sphere_loc_id, special_stage)
                     special_stage.locations.append(location)
                     world.total_locations += 1
                     sphere_loc_id += 2
 
             if ring_count > 0:
-                increment = 10 / ring_count
+                increment = 10 // ring_count
                 for a in range(ring_count):
-                    loc_name = f"Special Stage {i + 1}: {(a+1)*increment}% Rings"
+                    loc_name = f"Special Stage {i+1}: {(a+1)*increment}0% Rings"
                     location = Sonic3AIRLocation(world.player, loc_name, ring_loc_id, special_stage)
                     special_stage.locations.append(location)
                     world.total_locations += 1

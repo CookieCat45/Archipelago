@@ -78,22 +78,28 @@ class SpecialStageUnlockItemCount(Range):
     range_end = 14
 
 
-class SpecialStageSphereChecks(Range):
+class SpecialStageSphereChecks(Choice):
     """Adds checks to Special Stages that are cleared by collecting certain amounts of blue spheres.
     The value of this option determines the percentage of spheres that are necessary to complete a check.
     For example, if the value is 2:
     2 / 10 = 0.2 (every 20% of spheres collected in a stage)."""
-    range_start = 0
-    range_end = 10
+    option_0 = 0
+    option_5 = 5
+    option_3 = 3
+    option_2 = 2
+    option_1 = 1
 
 
-class SpecialStageRingChecks(Range):
+class SpecialStageRingChecks(Choice):
     """Adds checks to Special Stages that are cleared by collecting certain amounts of rings.
     The value of this option determines the percentage of rings that are necessary to complete a check.
     For example, if the value is 2:
     2 / 10 = 0.2 (every 20% of rings collected in a stage)."""
-    range_start = 0
-    range_end = 10
+    option_0 = 0
+    option_5 = 5
+    option_3 = 3
+    option_2 = 2
+    option_1 = 1
 
 
 @dataclass
