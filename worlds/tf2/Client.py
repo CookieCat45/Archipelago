@@ -339,7 +339,7 @@ class TF2Context(CommonContext):
                     Utils.async_start(self.send_msgs([{"cmd": "LocationChecks", "locations": location_ids}]))
                     val += 1
                     self.mvm_kill_counts[bot] = val
-                    key = format(f"MvmKillCount_{self.slot}_{bot}")
+                    key = format(f"MvmKillCount_{self.team}_{self.slot}_{bot}")
                     Utils.async_start(self.send_msgs([{"cmd": "Set", "key": key,
                                                        "operations": [
                                                            {"operation": "replace", "value": val}]}]))
@@ -368,7 +368,7 @@ class TF2Context(CommonContext):
                             Utils.async_start(self.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}]))
                             val += 1
                             self.class_kill_counts[class_name] = val
-                            key = format(f"ClassCount_{self.slot}_{class_name}")
+                            key = format(f"ClassCount_{self.team}_{self.slot}_{class_name}")
                             Utils.async_start(self.send_msgs([{"cmd": "Set", "key": key,
                                                                "operations": [
                                                                    {"operation": "replace", "value": val}]}]))
@@ -421,7 +421,7 @@ class TF2Context(CommonContext):
                         Utils.async_start(self.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}]))
                         val += 1
                         self.weapon_kill_counts[weapon] = val
-                        key = format(f"WeaponCount_{self.slot}_{weapon}")
+                        key = format(f"WeaponCount_{self.team}_{self.slot}_{weapon}")
                         Utils.async_start(self.send_msgs([{"cmd": "Set", "key": key,
                                                            "operations":[{"operation": "replace", "value": val}]}]))
 
@@ -463,7 +463,7 @@ class TF2Context(CommonContext):
 
         self.points += amount
         self.echo(f"Contract Points: {self.points}/{self.required_points}")
-        Utils.async_start(self.send_msgs([{"cmd": "Set", "key": f"ContractPoints_{self.slot}",
+        Utils.async_start(self.send_msgs([{"cmd": "Set", "key": f"ContractPoints_{self.team}_{self.slot}",
                                            "operations": [{"operation": "replace", "value": self.points}]}]))
 
         if self.points >= self.required_points:
@@ -579,21 +579,21 @@ class TF2Context(CommonContext):
             notify_list = []
             if self.is_casual:
                 for key in self.class_kill_reqs.keys():
-                    get_list.append(f"ClassCount_{self.slot}_{key}")
-                    notify_list.append(f"ClassCount_{self.slot}_{key}")
+                    get_list.append(f"ClassCount_{self.team}_{self.slot}_{key}")
+                    notify_list.append(f"ClassCount_{self.team}_{self.slot}_{key}")
 
                 for key in self.weapon_kill_reqs.keys():
-                    get_list.append(f"WeaponCount_{self.slot}_{key}")
-                    notify_list.append(f"WeaponCount_{self.slot}_{key}")
+                    get_list.append(f"WeaponCount_{self.team}_{self.slot}_{key}")
+                    notify_list.append(f"WeaponCount_{self.team}_{self.slot}_{key}")
 
             if self.is_mvm:
                 for key in self.mvm_kill_reqs.keys():
-                    get_list.append(f"MvmKillCount_{self.slot}_{key}")
-                    notify_list.append(f"MvmKillCount_{self.slot}_{key}")
+                    get_list.append(f"MvmKillCount_{self.team}_{self.slot}_{key}")
+                    notify_list.append(f"MvmKillCount_{self.team}_{self.slot}_{key}")
 
-            get_list.append(f"ContractPoints_{self.slot}")
-            notify_list.append(f"ContractPoints_{self.slot}")
-            get_list.append(f"ContractHints_{self.slot}")
+            get_list.append(f"ContractPoints_{self.team}_{self.slot}")
+            notify_list.append(f"ContractPoints_{self.team}_{self.slot}")
+            get_list.append(f"ContractHints_{self.team}_{self.slot}")
             if DEBUG:
                 logger.info(f"Get: {get_list}")
                 logger.info(f"SetNotify: {notify_list}")
@@ -687,7 +687,7 @@ class TF2Context(CommonContext):
             return
 
         if key.startswith("WeaponCount_"):
-            key = key.replace(f"WeaponCount_{self.slot}_", "")
+            key = key.replace(f"WeaponCount_{self.team}_{self.slot}_", "")
             self.weapon_kill_counts[key] = val
             if play_sound:
                 # someone in the same slot got a kill - play sounds to others
@@ -698,7 +698,7 @@ class TF2Context(CommonContext):
                 else:
                     self.play_gamesound("Quest.StatusTickNovice")
         elif key.startswith("ClassCount_"):
-            key = key.replace(f"ClassCount_{self.slot}_", "")
+            key = key.replace(f"ClassCount_{self.team}_{self.slot}_", "")
             self.class_kill_counts[key] = val
             if play_sound:
                 # someone in the same slot got a kill - play sounds to others
@@ -709,7 +709,7 @@ class TF2Context(CommonContext):
                 else:
                     self.play_gamesound("Quest.StatusTickNovice")
         elif key.startswith("MvmKillCount_"):
-            key = key.replace(f"MvmKillCount_{self.slot}_", "")
+            key = key.replace(f"MvmKillCount_{self.team}_{self.slot}_", "")
             self.mvm_kill_counts[key] = val
             if play_sound:
                 # someone in the same slot got a kill - play sounds to others
@@ -745,7 +745,7 @@ class TF2Context(CommonContext):
 
         hint = possible_hints[randint(0, len(possible_hints)-1)]
         self.contract_hints.append(hint)
-        Utils.async_start(self.send_msgs([{"cmd": "Set", "key": f"ContractHints_{self.slot}", "default": [],
+        Utils.async_start(self.send_msgs([{"cmd": "Set", "key": f"ContractHints_{self.team}_{self.slot}", "default": [],
                                            "operations": [{"operation": "add", "value": [hint]}]}]))
 
         bundle_name = self.get_bot_bundle_name(hint)
