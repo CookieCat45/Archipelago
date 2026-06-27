@@ -198,7 +198,26 @@ class TF2Context(CommonContext):
         # if DEBUG:
             # logger.info(f"Console output: {line}")
 
-        if line.find("ap_say ") == 0:
+        start = line.find("map     : ")
+        if start != -1:
+            start += 10
+        end = line.find(" at: ")
+        if start != -1 and end != -1:
+            map_name = line[start:end]
+            old_mode = self.game_mode
+            if map_name.find("mvm_") == 0:
+                self.game_mode = TF2GameMode.MVM
+            else:
+                self.game_mode = TF2GameMode.CASUAL
+
+            if self.game_mode != old_mode:
+                if self.game_mode == TF2GameMode.MVM:
+                    logger.info(f"Game Mode changed to: Mann vs. Machine")
+                elif self.game_mode == TF2GameMode.CASUAL:
+                    logger.info(f"Game Mode changed to: Casual")
+                else:
+                    logger.info(f"Game Mode changed to: Unknown")
+        elif line.find("ap_say ") == 0:
             index = line.find("ap_say ")+7
             message: str = line[index:]
             message = message.strip("\n")
@@ -275,62 +294,66 @@ class TF2Context(CommonContext):
             if not self.is_connected():
                 return
 
-            if line.find("killed") != -1 and line.find("with") != -1:
-                sound_played_novice = False
-                sound_played_expert = False
-                info: TFKillInfo = get_kill_info(line)
-                if self.is_mvm and self.game_mode == TF2GameMode.MVM:
-                    bot = info.victim
-                    # do a quick name fixup
-                    if bot == "Heavyweapons":
-                        bot = "Heavy"
-                    elif bot == "Heavy Shotgun":
-                        bot = "Shotgun Heavy"
-                    elif bot == "Extended Battalion Soldier":
-                        bot = "Battalion Soldier"
-                    elif bot == "Extended Buff Soldier":
-                        bot = "Buff Soldier"
-                    elif bot == "Extended Concheror Soldier":
-                        bot = "Concheror Soldier"
-                    elif bot == "Fast Scorch Shot" or bot == "Pyro Pusher":
-                        bot = "Flare Pyro"
-                    elif bot == "Minor League Scout" or bot == "Hyper League Scout":
-                        bot = "Sandman Scout"
-                    elif bot == "Steel Gauntlet Pusher":
-                        bot = "Steel Gauntlet"
-                    elif bot == "Razorback Sniper" or bot == "Sydney Sniper":
-                        bot = "Sniper"
-                    elif bot == "Giant Rapid Fire Demoman":
-                        bot = "Giant Demoman"
+            if line.find("killed") == -1 or line.find("with") == -1:
+                return
 
-                    req = self.mvm_kill_reqs.get(bot, 0)
-                    val = self.mvm_kill_counts.get(bot, 0)
-                    if req > 0 and val < req and self.has_bot_contract(bot):
-                        location_ids = []
-                        if bot not in self.mvm_boss_names:
-                            location_ids.append(self.mvm_location_ids[f"{bot} Kill #{val+1}"])
-                        else:
-                            for i in range(self.mvm_boss_reward):
-                                location_ids.append(self.mvm_location_ids[f"{bot} Reward #{i+1}"])
+            is_casual = bool(
+                self.is_casual and self.game_mode == TF2GameMode.CASUAL and self.current_class != TFClass.UNKNOWN)
+            sound_played_novice = False
+            sound_played_expert = False
+            info: TFKillInfo = get_kill_info(line)
+            if self.is_mvm and self.game_mode == TF2GameMode.MVM:
+                bot = info.victim
+                # do a quick name fixup
+                if bot == "Heavyweapons":
+                    bot = "Heavy"
+                elif bot == "Heavy Shotgun":
+                    bot = "Shotgun Heavy"
+                elif bot == "Extended Battalion Soldier":
+                    bot = "Battalion Soldier"
+                elif bot == "Extended Buff Soldier":
+                    bot = "Buff Soldier"
+                elif bot == "Extended Concheror Soldier":
+                    bot = "Concheror Soldier"
+                elif bot == "Fast Scorch Shot" or bot == "Pyro Pusher":
+                    bot = "Flare Pyro"
+                elif bot == "Minor League Scout" or bot == "Hyper League Scout":
+                    bot = "Sandman Scout"
+                elif bot == "Steel Gauntlet Pusher":
+                    bot = "Steel Gauntlet"
+                elif bot == "Razorback Sniper" or bot == "Sydney Sniper":
+                    bot = "Sniper"
+                elif bot == "Giant Rapid Fire Demoman":
+                    bot = "Giant Demoman"
 
-                        Utils.async_start(self.send_msgs([{"cmd": "LocationChecks", "locations": location_ids}]))
-                        val += 1
-                        self.mvm_kill_counts[bot] = val
-                        key = format(f"MvmKillCount_{self.slot}_{bot}")
-                        Utils.async_start(self.send_msgs([{"cmd": "Set", "key": key,
-                                                           "operations": [
-                                                               {"operation": "replace", "value": val}]}]))
-                        if val >= req:
-                            self.echo(f"COMPLETED CONTRACT: {bot} Kills ({val}/{req})")
-                            self.play_gamesound("Quest.StatusTickExpert")
-                            self.add_contract_points(1)
-                        else:
-                            self.play_gamesound("Quest.StatusTickNovice")
+                req = self.mvm_kill_reqs.get(bot, 0)
+                val = self.mvm_kill_counts.get(bot, 0)
+                if req > 0 and val < req and self.has_bot_contract(bot):
+                    location_ids = []
+                    if bot not in self.mvm_boss_names:
+                        location_ids.append(self.mvm_location_ids[f"{bot} Kill #{val+1}"])
+                    else:
+                        for i in range(self.mvm_boss_reward):
+                            location_ids.append(self.mvm_location_ids[f"{bot} Reward #{i+1}"])
 
-                        self.update_ui()
+                    Utils.async_start(self.send_msgs([{"cmd": "LocationChecks", "locations": location_ids}]))
+                    val += 1
+                    self.mvm_kill_counts[bot] = val
+                    key = format(f"MvmKillCount_{self.slot}_{bot}")
+                    Utils.async_start(self.send_msgs([{"cmd": "Set", "key": key,
+                                                       "operations": [
+                                                           {"operation": "replace", "value": val}]}]))
+                    if val >= req:
+                        self.echo(f"COMPLETED CONTRACT: {bot} Kills ({val}/{req})")
+                        self.play_gamesound("Quest.StatusTickExpert")
+                        self.add_contract_points(1)
+                    else:
+                        self.play_gamesound("Quest.StatusTickNovice")
 
-                elif (line.find(self.steam_name) == 0
-                 and self.is_casual and self.game_mode == TF2GameMode.CASUAL and self.current_class != TFClass.UNKNOWN):
+                    self.update_ui()
+
+            elif is_casual:
+                if line.find(self.steam_name) == 0:
                     class_name = self.current_class.tostr()
                     if not self.has_item(class_name):
                         # player does not have this class, don't send any checks
@@ -412,24 +435,6 @@ class TF2Context(CommonContext):
                                 self.play_gamesound("Quest.StatusTickNovice")
 
                         self.update_ui()
-        else:
-            start = line.find("map     : ") + 10
-            end = line.find(" at: ")
-            if start != -1 and end != -1:
-                map_name = line[start:end]
-                old_mode = self.game_mode
-                if map_name.find("mvm_") == 0:
-                    self.game_mode = TF2GameMode.MVM
-                else:
-                    self.game_mode = TF2GameMode.CASUAL
-
-                if self.game_mode != old_mode:
-                    if self.game_mode == TF2GameMode.MVM:
-                        logger.info(f"Game Mode changed to: Mann vs. Machine")
-                    elif self.game_mode == TF2GameMode.CASUAL:
-                        logger.info(f"Game Mode changed to: Casual")
-                    else:
-                        logger.info(f"Game Mode changed to: Unknown")
 
     def show_unknown_class_warning(self):
         if self.game_mode == TF2GameMode.MVM:

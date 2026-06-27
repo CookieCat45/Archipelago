@@ -214,8 +214,8 @@ class MvmContractCommonKillCount(Range):
     """The kill requirement each common robot contract will have.
     Setting this value high may force you to repeat missions."""
     range_start = 1
-    range_end = 25
-    default = 8
+    range_end = 20
+    default = 4
 
 class MvmContractGiantKillCount(Range):
     """The kill requirement each giant robot contract will have.
@@ -236,7 +236,7 @@ class MvmContractBossReward(Range):
     """How many checks are rewarded upon completion of a boss contract."""
     range_start = 1
     range_end = 20
-    default = 15
+    default = 10
 
 class MvmCommonBotWhitelist(OptionDict):
     """Whitelist of robots permitted to be contract objectives.
@@ -295,7 +295,7 @@ class MvmBossWhitelist(OptionDict):
     }
 
 class MvmKillCountPlando(OptionDict):
-    """Use this to set a specific required kill count for bot types. This cannot be higher than 25."""
+    """Use this to set a specific required kill count for bot types. This cannot be higher than 20."""
     default = {}
 
 class DeathLinkAmnesty(Range):

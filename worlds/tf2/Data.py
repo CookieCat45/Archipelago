@@ -170,6 +170,7 @@ weapon_kill_names = [
         "rainblower": "Flamethrower",
         "phlogistinator": "Phlogistinator",
         "dragons_fury": "Dragon's Fury",
+        "dragons_fury_bonus": "Dragon's Fury",
         "backburner": "Backburner",
         "degreaser": "Degreaser",
 
