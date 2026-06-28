@@ -291,7 +291,6 @@ class MvmBossWhitelist(OptionDict):
         "Sir Nukesalot": 50,
         "Major Bomber": 50,
         "Captain Punch": 50,
-        "Chief Heal-on-Kill Heavy": 50,
     }
 
 class MvmKillCountPlando(OptionDict):

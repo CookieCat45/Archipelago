@@ -719,7 +719,7 @@ class TF2Context(CommonContext):
                     self.play_gamesound("Quest.StatusTickExpert")
                 else:
                     self.play_gamesound("Quest.StatusTickNovice")
-        elif key.startswith("ContractPoints"):
+        elif key.startswith("ContractPoints") and val > self.points:
             self.points = val
         elif key.startswith("ContractHints"):
             self.contract_hints = val
@@ -777,7 +777,7 @@ async def rcon_loop(ctx: TF2Context):
                     # clean up the old file if it exists
                     condump = ctx.get_condump_file()
                     if os.path.isfile(condump):
-                        with open(condump, 'r+') as file:
+                        with open(condump, 'r+', encoding='utf-8', errors='ignore') as file:
                             file.truncate(0)
 
                     while True:
@@ -821,7 +821,7 @@ async def rcon_loop(ctx: TF2Context):
                         condump = ctx.get_condump_file()
                         if ctx.condump_io is not None or os.path.isfile(condump):
                             if ctx.condump_io is None:
-                                ctx.condump_io = open(condump)
+                                ctx.condump_io = open(condump, 'r', encoding='utf-8', errors='ignore')
 
                             for line in ctx.condump_io:
                                 ctx.on_console_line(line)
