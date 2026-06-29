@@ -850,6 +850,7 @@ def get_reliable_ip():
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
     except:
+        # Fallback
         ip = socket.gethostbyname(socket.gethostname())
     finally:
         s.close()
