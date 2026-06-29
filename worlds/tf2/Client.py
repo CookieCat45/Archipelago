@@ -772,7 +772,7 @@ async def rcon_loop(ctx: TF2Context):
     while not ctx.exit_event.is_set():
         if ctx.rcon_password != "":
             try:
-                with RCONClient(socket.gethostbyname(socket.gethostname()), 27015, password=ctx.rcon_password) as ctx.rcon:
+                with RCONClient(get_reliable_ip(), 27015, password=ctx.rcon_password) as ctx.rcon:
                     logger.info("Connected to TF2 RCON!")
                     # clean up the old file if it exists
                     condump = ctx.get_condump_file()
@@ -842,6 +842,18 @@ async def rcon_loop(ctx: TF2Context):
                     ctx.rcon_password = ""
 
         await asyncio.sleep(0.1)
+
+
+def get_reliable_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except:
+        ip = socket.gethostbyname(socket.gethostname())
+    finally:
+        s.close()
+    return ip
 
 
 class TF2Manager(GameManager):
