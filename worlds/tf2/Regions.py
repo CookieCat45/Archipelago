@@ -180,6 +180,14 @@ def get_location_id(name: str) -> int:
         return 61000
     elif name == "Direct Hit":
         return 62000
+    elif name == "Soda Popper":
+        return 63000
+    elif name == "Mantreads":
+        return 64000
+    elif name == "Sun-on-a-Stick":
+        return 65000
+    elif name == "Pain Train":
+        return 66000
 
     try:
         class_type: TFClass = TFClass[name.upper()]
