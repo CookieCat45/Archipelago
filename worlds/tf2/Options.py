@@ -176,7 +176,7 @@ class GeneralKillObjectiveCount(Range):
     For example, 5 kills as Scout would be 5 checks at one per kill."""
     range_start = 5
     range_end = 15
-    default = 5
+    default = 6
 
 class WeaponKillObjectiveCount(Range):
     """The number of kills performed with each unique weapon in the multiworld that will be location checks.
@@ -257,11 +257,6 @@ class MvmCommonBotWhitelist(OptionDict):
         "Demoman": 50,
         "Heavy": 50,
         "Uber Medic": 50,
-        "Quick-Fix Medic": 50,
-        "Sandman Scout": 50,
-        "Buff Soldier": 50,
-        "Concheror Soldier": 50,
-        "Flare Pyro": 50,
         "Demoknight": 50,
         "Steel Gauntlet": 50,
         "Heavyweight Champ": 50,
