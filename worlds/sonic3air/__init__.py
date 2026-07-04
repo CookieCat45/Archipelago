@@ -53,7 +53,7 @@ class Sonic3AIRWorld(World):
             "ZoneUnlockMode": self.options.ZoneUnlockMode.value,
             "ZonesAllowed": self.options.ZonesAllowed.value,
             "Goal": self.options.Goal.value,
-            "SpecialStageUnlockItemCount": self.options.SpecialStageUnlockItemCount,
+            "SpecialStageUnlockItemCount": self.options.SpecialStageUnlockItemCount.value,
             "KnucklesStoryMode": self.options.KnucklesStoryMode.value,
             "KnucklesGoal": self.options.KnucklesGoal.value,
             "KnucklesAndTails": self.options.KnucklesAndTails.value,
