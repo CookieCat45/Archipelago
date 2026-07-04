@@ -11,6 +11,8 @@ class Sonic3AIRItem(Item):
 class LocData(NamedTuple):
     id: int = 0
     region: str = ""
+    char_whitelist = []
+    required_items = []
 
 class ItemData(NamedTuple):
     code: Optional[int]

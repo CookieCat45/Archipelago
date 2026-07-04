@@ -39,10 +39,15 @@ items_zones = {
     "Progressive Special Stage Unlock": ItemData(2020300025, ItemClassification.progression),
 }
 
+items_misc = {
+    "Chaos Emerald": ItemData(2020300026, ItemClassification.progression),
+}
+
 item_table = {
     **items_junk,
     **items_characters,
     **items_zones,
+    **items_misc,
 }
 
 def fill_itempool(world: "Sonic3AIRWorld"):
@@ -84,6 +89,8 @@ def get_item_count(world: "Sonic3AIRWorld", item: str) -> int:
         return len(world.zones_available)-1
     elif item == "Progressive Special Stage Unlock":
         return world.options.SpecialStageUnlockItemCount.value
+    elif item == "Chaos Emerald":
+        return 14
 
     return 1
 

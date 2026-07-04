@@ -1,4 +1,4 @@
-from typing import NamedTuple, Union
+from typing import NamedTuple, Union, Mapping, Any
 from BaseClasses import Item, Tutorial, ItemClassification, MultiWorld
 from .Options import Sonic3AIROptions
 from .Regions import init_regions
@@ -44,6 +44,24 @@ class Sonic3AIRWorld(World):
 
     def create_item(self, name: str) -> Item:
         return create_item(self, name)
+
+    def get_filler_item_name(self) -> str:
+        return "10 Rings"
+
+    def fill_slot_data(self) -> Mapping[str, Any]:
+        slot_data = {
+            "ZoneUnlockMode": self.options.ZoneUnlockMode.value,
+            "ZonesAllowed": self.options.ZonesAllowed.value,
+            "Goal": self.options.Goal.value,
+            "SpecialStageUnlockItemCount": self.options.SpecialStageUnlockItemCount,
+            "KnucklesStoryMode": self.options.KnucklesStoryMode.value,
+            "KnucklesGoal": self.options.KnucklesGoal.value,
+            "KnucklesAndTails": self.options.KnucklesAndTails.value,
+            "KnucklesNoDeathEgg": self.options.KnucklesNoDeathEgg.value,
+            "ShuffleGiantRings": self.options.ShuffleGiantRings.value,
+        }
+
+        return slot_data
 
     def is_doomsday_goal(self) -> bool:
         return self.options.Goal.value > 0

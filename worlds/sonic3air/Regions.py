@@ -1,7 +1,8 @@
 from BaseClasses import Region, Entrance, ItemClassification, Location, LocationProgressType
 from typing import TYPE_CHECKING, List, Dict, Optional
-from .Locations import location_table
+from .Locations import location_table, giant_rings
 from .Items import create_item
+from .Options import ZoneUnlockMode
 from .Types import Sonic3AIRLocation
 
 if TYPE_CHECKING:
@@ -49,7 +50,7 @@ def init_regions(world: "Sonic3AIRWorld"):
         ring_count = 10 // world.options.SpecialStageRingChecks
         for i in range(world.options.SpecialStageUnlockItemCount):
             special_stage = create_region_and_connect(world, f"Special Stage {i+1}",
-                                                      f"-> Special Stage{i+1}", special_stage_region)
+                                                      f"-> Special Stage {i+1}", special_stage_region)
             if sphere_count > 0:
                 increment = 10 // sphere_count
                 for a in range(sphere_count):
@@ -68,8 +69,7 @@ def init_regions(world: "Sonic3AIRWorld"):
                     world.total_locations += 1
                     ring_loc_id += 2
 
-    if world.options.ZoneUnlockMode.value == 0:
-        # linear mode
+    if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
         world.zones_available = zones
         for zone in world.zones_available:
             if zone not in world.options.ZonesAllowed.value:
@@ -79,12 +79,13 @@ def init_regions(world: "Sonic3AIRWorld"):
     else:
         # shuffle mode
         world.zones_available = world.options.ZonesAllowed.value
-        if world.options.ZoneUnlockMode.value == 2 and "Death Egg Zone" in world.zones_available:
+        if (world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg
+         and "Death Egg Zone" in world.zones_available):
             world.zones_available.remove("Death Egg Zone")
 
         world.random.shuffle(world.zones_available)
         del world.zones_available[world.options.ZoneCount:]
-        if world.options.ZoneUnlockMode.value == 2:
+        if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
             world.zones_available.append("Death Egg Zone")
 
     for zone in world.zones_available:
@@ -106,7 +107,7 @@ def init_regions(world: "Sonic3AIRWorld"):
         create_region_and_connect(world, "Doomsday Zone", "Doomsday Zone Entrance", menu)
 
     world.starting_zone = world.zones_available[0]
-    if world.options.ZoneUnlockMode.value == 0:
+    if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
         world.multiworld.push_precollected(create_item(world, "Progressive Zone Unlock"))
     else:
         world.multiworld.push_precollected(create_item(world, f"Zone Unlock: {world.starting_zone}"))
@@ -114,8 +115,10 @@ def init_regions(world: "Sonic3AIRWorld"):
 
 def create_region(world: "Sonic3AIRWorld", name: str) -> Region:
     reg = Region(name, world.player, world.multiworld)
-
     for (key, data) in location_table.items():
+        if not world.options.ShuffleGiantRings and key in giant_rings:
+            continue
+
         if data.region == name:
             location = Sonic3AIRLocation(world.player, key, data.id, reg)
             reg.locations.append(location)

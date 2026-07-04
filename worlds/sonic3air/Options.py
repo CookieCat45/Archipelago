@@ -34,7 +34,9 @@ class ZoneCount(Range):
 class ZonesAllowed(OptionList):
     """List of zone names to allow in the game (excluding Doomsday Zone which is conditional)
     If playing in linear mode, missing zones will be skipped.
-    If playing in shuffled mode, missing zones will not be added to the item pool."""
+    If playing in shuffled mode, missing zones will not be added to the item pool.
+    Note that some other options may force certain zones
+    to exist anyway regardless of this list (Death Egg, Sky Sanctuary)"""
     default = (
         "Angel Island Zone",
         "Hydrocity Zone",
@@ -53,18 +55,54 @@ class ZonesAllowed(OptionList):
 
 
 class Goal(Choice):
-    """Determines what the goal of the game is.
-    allzones: Complete all available zones.
-    doomsday: Collect all Chaos Emeralds and finish Doomsday Zone.
-    doomsday_hyper: Collect all Chaos + Super Emeralds and finish Doomsday Zone.
-    allzones_doomsday: Complete all zones, collect all Chaos Emeralds and finish Doomsday Zone.
-    allzones_doomsday_hyper: Complete all zones, collect all Chaos + Super Emeralds and finish Doomsday Zone.
+    """Determines what the goal of the game is
+    allzones: Complete all available zones as Sonic and/or Tails
+    doomsday: Collect all Chaos Emeralds and finish Doomsday Zone
+    doomsday_hyper: Collect all Chaos + Super Emeralds and finish Doomsday Zone
+    allzones_doomsday: Complete all zones, collect all Chaos Emeralds and finish Doomsday Zone
+    allzones_doomsday_hyper: Complete all zones, collect all Chaos + Super Emeralds and finish Doomsday Zone
     """
     option_allzones = 0
     option_doomsday = 1
     option_doomsday_hyper = 2
     option_allzones_doomsday = 3
     option_allzones_doomsday_hyper = 4
+
+
+class KnucklesStoryMode(Choice):
+    """Determines how the Knuckles storyline should be factored in
+    normal: Completing acts as Knuckles will count towards completing a zone globally, Sky Sanctuary is not playable as Knuckles
+    goal: Adds another goal requirement based on the KnucklesGoal option in addition to the standard goal requirements
+    removed: Knuckles is not playable and all of his levels are inaccessible
+    exclusive: Sonic and Tails are removed, only Knuckles and his levels are playable"""
+    option_normal = 0
+    option_goal = 1
+    option_removed = 2
+    option_exclusive = 3
+
+
+class KnucklesGoal(Choice):
+    """If KnucklesStoryMode is set to 'goal' or 'exclusive' this option determines the goal requirement for Knuckles
+    allzones: Complete all available zones as Knuckles
+    doomsday: Collect all Chaos Emeralds and finish Doomsday Zone
+    doomsday_hyper: Collect all Chaos + Super Emeralds and finish Doomsday Zone
+    allzones_doomsday: Complete all zones, collect all Chaos Emeralds and finish Doomsday Zone
+    allzones_doomsday_hyper: Complete all zones, collect all Chaos + Super Emeralds and finish Doomsday Zone
+    allzones_sanctuary: Same as 'allzones', but Sky Sanctuary will always be the last completable zone for Knuckles"""
+    option_allzones = 0
+    option_doomsday = 1
+    option_doomsday_hyper = 2
+    option_allzones_doomsday = 3
+    option_allzones_doomsday_hyper = 4
+    option_allzones_sanctuary = 5
+
+
+class KnucklesAndTails(Toggle):
+    """Allow Knuckles to be played with Tails"""
+
+
+class KnucklesNoDeathEgg(Toggle):
+    """Prevents Knuckles from being able to play Death Egg Zone"""
 
 
 class ShuffleGiantRings(DefaultOnToggle):
@@ -88,6 +126,7 @@ class SpecialStageSphereChecks(Choice):
     option_3 = 3
     option_2 = 2
     option_1 = 1
+    default = 3
 
 
 class SpecialStageRingChecks(Choice):
@@ -100,6 +139,7 @@ class SpecialStageRingChecks(Choice):
     option_3 = 3
     option_2 = 2
     option_1 = 1
+    default = 0
 
 
 @dataclass
@@ -109,6 +149,10 @@ class Sonic3AIROptions(PerGameCommonOptions):
     ZoneCount: ZoneCount
     ZonesAllowed: ZonesAllowed
     Goal: Goal
+    KnucklesStoryMode: KnucklesStoryMode
+    KnucklesGoal: KnucklesGoal
+    KnucklesAndTails: KnucklesAndTails
+    KnucklesNoDeathEgg: KnucklesNoDeathEgg
     ShuffleGiantRings: ShuffleGiantRings
     SpecialStageUnlockItemCount: SpecialStageUnlockItemCount
     SpecialStageSphereChecks: SpecialStageSphereChecks
