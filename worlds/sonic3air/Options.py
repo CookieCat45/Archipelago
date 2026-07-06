@@ -97,14 +97,6 @@ class KnucklesGoal(Choice):
     option_allzones_sanctuary = 5
 
 
-class KnucklesAndTails(Toggle):
-    """Allow Knuckles to be played with Tails"""
-
-
-class KnucklesNoDeathEgg(Toggle):
-    """Prevents Knuckles from being able to play Death Egg Zone"""
-
-
 class ShuffleGiantRings(DefaultOnToggle):
     """Turns the Giant Rings found in most levels into location checks."""
 
@@ -151,8 +143,6 @@ class Sonic3AIROptions(PerGameCommonOptions):
     Goal: Goal
     KnucklesStoryMode: KnucklesStoryMode
     KnucklesGoal: KnucklesGoal
-    KnucklesAndTails: KnucklesAndTails
-    KnucklesNoDeathEgg: KnucklesNoDeathEgg
     ShuffleGiantRings: ShuffleGiantRings
     SpecialStageUnlockItemCount: SpecialStageUnlockItemCount
     SpecialStageSphereChecks: SpecialStageSphereChecks

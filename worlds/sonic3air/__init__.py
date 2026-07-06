@@ -52,13 +52,13 @@ class Sonic3AIRWorld(World):
         slot_data = {
             "ZoneUnlockMode": self.options.ZoneUnlockMode.value,
             "ZonesAllowed": self.options.ZonesAllowed.value,
+            "ZoneCount": len(self.options.ZonesAllowed.value),
             "Goal": self.options.Goal.value,
             "SpecialStageUnlockItemCount": self.options.SpecialStageUnlockItemCount.value,
             "KnucklesStoryMode": self.options.KnucklesStoryMode.value,
             "KnucklesGoal": self.options.KnucklesGoal.value,
-            "KnucklesAndTails": self.options.KnucklesAndTails.value,
-            "KnucklesNoDeathEgg": self.options.KnucklesNoDeathEgg.value,
             "ShuffleGiantRings": self.options.ShuffleGiantRings.value,
+            "DeathLink": self.options.death_link.value
         }
 
         return slot_data
