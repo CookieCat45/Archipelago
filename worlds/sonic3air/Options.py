@@ -74,11 +74,13 @@ class KnucklesStoryMode(Choice):
     normal: Completing acts as Knuckles will count towards completing a zone globally, Sky Sanctuary is not playable as Knuckles
     goal: Adds another goal requirement based on the KnucklesGoal option in addition to the standard goal requirements
     removed: Knuckles is not playable and all of his levels are inaccessible
-    exclusive: Sonic and Tails are removed, only Knuckles and his levels are playable"""
+    exclusive: Sonic and Tails are removed, only Knuckles and his levels are playable
+    exclusive_tails: Same as Exclusive, but Tails is re-added and Knuckles+Tails are playable together (not Tails alone)"""
     option_normal = 0
     option_goal = 1
     option_removed = 2
     option_exclusive = 3
+    option_exclusive_tails = 4
 
 
 class KnucklesGoal(Choice):

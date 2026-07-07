@@ -58,7 +58,8 @@ class Sonic3AIRWorld(World):
             "KnucklesStoryMode": self.options.KnucklesStoryMode.value,
             "KnucklesGoal": self.options.KnucklesGoal.value,
             "ShuffleGiantRings": self.options.ShuffleGiantRings.value,
-            "DeathLink": self.options.death_link.value
+            "DeathLink": self.options.death_link.value,
+            "Seed": self.multiworld.seed,
         }
 
         return slot_data

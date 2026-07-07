@@ -71,17 +71,17 @@ giant_rings = {
     "Carnival Night Zone: Act 2 - Giant Ring (Knuckles Route, Near End)":
         LocData(11702256, "Carnival Night Zone: Act 2", char_whitelist=["Knuckles"]),
 
-    "Ice Cap Zone: Act 1 - Giant Ring (Right of Breakable Platform Switch)":
-        LocData(11193660, "Ice Cap Zone: Act 1"),
-    "Ice Cap Zone: Act 1 - Giant Ring (Right of Endless Slide)":
-        LocData(11948635, "Ice Cap Zone: Act 1"),
+    "IceCap Zone: Act 1 - Giant Ring (Right of Breakable Platform Switch)":
+        LocData(11193660, "IceCap Zone: Act 1"),
+    "IceCap Zone: Act 1 - Giant Ring (Right of Endless Slide)":
+        LocData(11948635, "IceCap Zone: Act 1"),
 
-    "Ice Cap Zone: Act 2 - Giant Ring (Knuckles Route, Underwater)":
-        LocData(3397486, "Ice Cap Zone: Act 2", char_whitelist=["Knuckles"]),
-    "Ice Cap Zone: Act 2 - Giant Ring (Underwater, Below Checkpoint)":
-        LocData(8346764, "Ice Cap Zone: Act 2"),
-    "Ice Cap Zone: Act 2 - Giant Ring (Before Boss, Right of Trampoline Rings)":
-        LocData(10947233, "Ice Cap Zone: Act 2"),
+    "IceCap Zone: Act 2 - Giant Ring (Knuckles Route, Underwater)":
+        LocData(3397486, "IceCap Zone: Act 2", char_whitelist=["Knuckles"]),
+    "IceCap Zone: Act 2 - Giant Ring (Underwater, Below Checkpoint)":
+        LocData(8346764, "IceCap Zone: Act 2"),
+    "IceCap Zone: Act 2 - Giant Ring (Before Boss, Right of Trampoline Rings)":
+        LocData(10947233, "IceCap Zone: Act 2"),
 
     "Launch Base Zone: Act 1 - Giant Ring (Near Beginning, Below Spinning Cylinder)":
         LocData(461461, "Launch Base Zone: Act 1"),
@@ -102,9 +102,37 @@ giant_rings = {
         LocData(8095082, "Launch Base Zone: Act 2", char_whitelist=["Sonic", "Tails"]),
 }
 
+act_completions = {
+    "Angel Island Zone: Act 1 - Complete": LocData(1000, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 2 - Complete": LocData(1500, "Angel Island Zone: Act 2"),
+    "Hydrocity Zone: Act 1 - Complete": LocData(2000, "Hydrocity Zone: Act 1"),
+    "Hydrocity Zone: Act 2 - Complete": LocData(2500, "Hydrocity Zone: Act 2"),
+    "Marble Garden Zone: Act 1 - Complete": LocData(3000, "Marble Garden Zone: Act 1"),
+    "Marble Garden Zone: Act 2 - Complete": LocData(3500, "Marble Garden Zone: Act 2"),
+    "Carnival Night Zone: Act 1 - Complete": LocData(4000, "Carnival Night Zone: Act 1"),
+    "Carnival Night Zone: Act 2 - Complete": LocData(4500, "Carnival Night Zone: Act 2"),
+    "IceCap Zone: Act 1 - Complete": LocData(6000, "IceCap Zone: Act 1"),
+    "IceCap Zone: Act 2 - Complete": LocData(6500, "IceCap Zone: Act 2"),
+    "Launch Base Zone: Act 1 - Complete": LocData(7000, "Launch Base Zone: Act 1"),
+    "Launch Base Zone: Act 2 - Complete": LocData(7500, "Launch Base Zone: Act 2"),
+    "Mushroom Hill Zone: Act 1 - Complete": LocData(8000, "Mushroom Hill Zone: Act 1"),
+    "Mushroom Hill Zone: Act 2 - Complete": LocData(8500, "Mushroom Hill Zone: Act 2"),
+    "Flying Battery Zone: Act 1 - Complete": LocData(5000, "Flying Battery Zone: Act 1"),
+    "Flying Battery Zone: Act 2 - Complete": LocData(5500, "Flying Battery Zone: Act 2"),
+    "Sandopolis Zone: Act 1 - Complete": LocData(9000, "Sandopolis Zone: Act 1"),
+    "Sandopolis Zone: Act 2 - Complete": LocData(9500, "Sandopolis Zone: Act 2"),
+    "Lava Reef Zone: Act 1 - Complete": LocData(10000, "Lava Reef Zone: Act 1"),
+    "Lava Reef Zone: Act 2 - Complete": LocData(10500, "Lava Reef Zone: Act 2"),
+    "Hidden Palace Zone: Complete": LocData(22500, "Hidden Palace Zone"),
+    "Sky Sanctuary Zone: Complete": LocData(11000, "Sky Sanctuary Zone"),
+    "Death Egg Zone: Act 1 - Complete": LocData(12000, "Death Egg Zone: Act 1"),
+    "Death Egg Zone: Act 2 - Complete": LocData(12500, "Death Egg Zone: Act 2"),
+    "Doomsday Zone: Complete": LocData(13000, "Doomsday Zone"),
+}
 
 location_table = {
     **giant_rings,
+    **act_completions,
 }
 
 

@@ -1,6 +1,7 @@
 from .Types import ItemData, Sonic3AIRItem
 from BaseClasses import Location, Item, ItemClassification
 from typing import TYPE_CHECKING, List, Dict, Optional
+from .Options import ZoneUnlockMode
 
 if TYPE_CHECKING:
     from . import Sonic3AIRWorld
@@ -52,26 +53,25 @@ item_table = {
 
 def fill_itempool(world: "Sonic3AIRWorld"):
     item_count = 0
-    zone_unlock_mode = world.options.ZoneUnlockMode
     for item, data in item_table.items():
         if data.classification == ItemClassification.filler:
             continue
 
         if item.startswith("Zone Unlock: "):
-            if zone_unlock_mode == zone_unlock_mode.option_linear:
+            if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
                 continue
 
-            zone: str = item[len("Zone Unlock: ")-1:]
+            zone: str = item[len("Zone Unlock: ")-1:].strip()
             if zone == world.starting_zone:
                 continue
 
-            if zone_unlock_mode != zone_unlock_mode.option_shuffled_deathegg and zone == "Death Egg Zone":
+            if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
                 continue
 
             if zone not in world.zones_available:
                 continue
 
-        if zone_unlock_mode != zone_unlock_mode.option_linear and item == "Progressive Zone Unlock":
+        if world.options.ZoneUnlockMode != ZoneUnlockMode.option_linear and item == "Progressive Zone Unlock":
             continue
 
         count = get_item_count(world, item)

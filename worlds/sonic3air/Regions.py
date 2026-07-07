@@ -1,9 +1,9 @@
 from BaseClasses import Region, Entrance, ItemClassification, Location, LocationProgressType
 from typing import TYPE_CHECKING, List, Dict, Optional
-from .Locations import location_table, giant_rings
+from .Locations import location_table, giant_rings, act_completions
 from .Items import create_item
 from .Options import ZoneUnlockMode
-from .Types import Sonic3AIRLocation
+from .Types import Sonic3AIRLocation, Sonic3AIRItem
 
 if TYPE_CHECKING:
     from . import Sonic3AIRWorld
@@ -72,21 +72,29 @@ def init_regions(world: "Sonic3AIRWorld"):
     if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
         world.zones_available = zones
         for zone in world.zones_available:
+            # Purge any zones not in the option list
             if zone not in world.options.ZonesAllowed.value:
                 world.zones_available.remove(zone)
 
+        # Truncate
         del world.zones_available[world.options.ZoneCount:]
     else:
         # shuffle mode
         world.zones_available = world.options.ZonesAllowed.value
+
+        # Always put Death Egg at the end if we're doing shuffled_deathegg
         if (world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg
          and "Death Egg Zone" in world.zones_available):
             world.zones_available.remove("Death Egg Zone")
 
+        # Shuffle and truncate
         world.random.shuffle(world.zones_available)
         del world.zones_available[world.options.ZoneCount:]
+
         if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
             world.zones_available.append("Death Egg Zone")
+            if "Death Egg Zone" not in world.options.ZonesAllowed.value:
+                world.options.ZonesAllowed.value.append("Death Egg Zone")
 
     for zone in world.zones_available:
         if zone not in zones:
@@ -95,16 +103,20 @@ def init_regions(world: "Sonic3AIRWorld"):
 
     world.random.shuffle(world.zones_available)
     for zone in world.zones_available:
+        # Create zone regions
         zone_region = create_region_and_connect(world, zone, f"{zone} Entrance", menu)
         if special_stage_region is not None and zone not in no_giantring_zones:
             zone_region.connect(special_stage_region, f"{zone} -> Special Stages")
 
+        # Create act regions
         if zone not in single_act_zones:
-            create_region_and_connect(world, f"{zone}: Act 1", f"{zone}: Act 1 Entrance", zone_region)
-            create_region_and_connect(world, f"{zone}: Act 2", f"{zone}: Act 2 Entrance", zone_region)
+            act_1 = create_region_and_connect(world, f"{zone}: Act 1", f"{zone}: Act 1 Entrance", zone_region)
+            create_region_and_connect(world, f"{zone}: Act 2", f"{zone}: Act 2 Entrance", act_1)
 
+    # Add Doomsday if it's relevant
     if world.is_doomsday_goal():
         create_region_and_connect(world, "Doomsday Zone", "Doomsday Zone Entrance", menu)
+        world.options.ZonesAllowed.value.append("Doomsday Zone")
 
     world.starting_zone = world.zones_available[0]
     if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
@@ -120,6 +132,14 @@ def create_region(world: "Sonic3AIRWorld", name: str) -> Region:
             continue
 
         if data.region == name:
+            if key in act_completions:
+                # add an event for act completion
+                act_event_name = f"Act Complete ({name})"
+                event = Sonic3AIRLocation(world.player, act_event_name, None, reg)
+                event.place_locked_item(Sonic3AIRItem(act_event_name, ItemClassification.progression, None, world.player))
+                event.show_in_spoiler = False
+                reg.locations.append(event)
+
             location = Sonic3AIRLocation(world.player, key, data.id, reg)
             reg.locations.append(location)
             world.total_locations += 1
