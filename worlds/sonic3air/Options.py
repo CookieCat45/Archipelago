@@ -2,7 +2,8 @@ from typing import List, TYPE_CHECKING, Dict, Any
 from schema import Schema, Optional
 from dataclasses import dataclass
 from worlds.AutoWorld import PerGameCommonOptions
-from Options import Range, Toggle, DeathLink, Choice, OptionList, DefaultOnToggle, OptionGroup, StartInventoryPool
+from Options import Range, Toggle, DeathLink, Choice, OptionList, DefaultOnToggle, OptionGroup, StartInventoryPool, \
+OptionDict
 
 
 class StartingCharacter(Choice):
@@ -14,7 +15,7 @@ class StartingCharacter(Choice):
 
 class ZoneUnlockMode(Choice):
     """Determines how zone unlocking works.
-    linear: Zones are unlocked in the vanilla order through a progressive item. You start with Angel Island Zone.
+    linear: Zones are unlocked in the vanilla order through a progressive item. You start with Angel Island Zone (or whatever is earliest).
     shuffled: Individual zone unlocks are shuffled into the item pool. You start with a random zone.
     shuffled_deathegg: Same as shuffled, but locks Death Egg Zone until all other zones are completed,
         and removes Death Egg Zone from the item pool.
@@ -25,7 +26,9 @@ class ZoneUnlockMode(Choice):
 
 
 class ZoneCount(Range):
-    """Determines the total number of zones available."""
+    """Determines the total number of zones available.
+    If this value is below the number of zones in the ZonesAllowed list, available zones will be chosen at random.
+    This option only applies if ZoneUnlockMode is set to something other than linear."""
     range_start = 1
     range_end = 13
     default = 13
@@ -71,7 +74,7 @@ class Goal(Choice):
 
 class KnucklesStoryMode(Choice):
     """Determines how the Knuckles storyline should be factored in
-    normal: Completing acts as Knuckles will count towards completing a zone globally, Sky Sanctuary is not playable as Knuckles
+    normal: Completing acts as Knuckles will count towards completing a zone globally
     goal: Adds another goal requirement based on the KnucklesGoal option in addition to the standard goal requirements
     removed: Knuckles is not playable and all of his levels are inaccessible
     exclusive: Sonic and Tails are removed, only Knuckles and his levels are playable
@@ -90,7 +93,7 @@ class KnucklesGoal(Choice):
     doomsday_hyper: Collect all Chaos + Super Emeralds and finish Doomsday Zone
     allzones_doomsday: Complete all zones, collect all Chaos Emeralds and finish Doomsday Zone
     allzones_doomsday_hyper: Complete all zones, collect all Chaos + Super Emeralds and finish Doomsday Zone
-    allzones_sanctuary: Same as 'allzones', but Sky Sanctuary will always be the last completable zone for Knuckles"""
+    allzones_sanctuary: Same as 'allzones', but Sky Sanctuary will always be the last completable zone for Knuckles, and will be the Mecha Sonic boss for him"""
     option_allzones = 0
     option_doomsday = 1
     option_doomsday_hyper = 2
@@ -123,6 +126,19 @@ class SpecialStageSphereChecks(Choice):
     default = 3
 
 
+class JunkItemWeights(OptionDict):
+    """Weights for junk items to be added to the pool"""
+    default = {
+        "10 Rings": 50,
+        "Extra Life": 10,
+        "Fire Shield": 10,
+        "Bubble Shield": 10,
+        "Electric Shield": 10,
+        "Speed Shoes": 5,
+        "Invincibility": 5,
+    }
+
+
 class SpecialStageRingChecks(Choice):
     """Adds checks to Special Stages that are cleared by collecting certain amounts of rings.
     The value of this option determines the percentage of rings that are necessary to complete a check.
@@ -149,5 +165,6 @@ class Sonic3AIROptions(PerGameCommonOptions):
     SpecialStageUnlockItemCount: SpecialStageUnlockItemCount
     SpecialStageSphereChecks: SpecialStageSphereChecks
     SpecialStageRingChecks: SpecialStageRingChecks
+    JunkItemWeights: JunkItemWeights
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink

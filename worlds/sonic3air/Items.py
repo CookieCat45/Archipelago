@@ -1,7 +1,8 @@
+from .Locations import get_total_locations
 from .Types import ItemData, Sonic3AIRItem
 from BaseClasses import Location, Item, ItemClassification
 from typing import TYPE_CHECKING, List, Dict, Optional
-from .Options import ZoneUnlockMode
+from .Options import ZoneUnlockMode, KnucklesStoryMode
 
 if TYPE_CHECKING:
     from . import Sonic3AIRWorld
@@ -40,21 +41,39 @@ items_zones = {
     "Progressive Special Stage Unlock": ItemData(2020300025, ItemClassification.progression),
 }
 
+items_traps = {
+
+}
+
 items_misc = {
     "Chaos Emerald": ItemData(2020300026, ItemClassification.progression),
 }
 
 item_table = {
     **items_junk,
+    **items_traps,
     **items_characters,
     **items_zones,
     **items_misc,
 }
 
 def fill_itempool(world: "Sonic3AIRWorld"):
+    for key in world.options.JunkItemWeights.keys():
+        if key not in items_junk.keys():
+            raise Exception(f"Invalid item '{key}' in JunkItemWeights for player {world.multiworld.get_player_name(world.player)}")
+
     item_count = 0
     for item, data in item_table.items():
         if data.classification == ItemClassification.filler:
+            continue
+
+        if item == world.starting_character:
+            continue
+
+        if world.options.KnucklesStoryMode == KnucklesStoryMode.option_exclusive and (item == "Sonic" or item == "Tails"):
+            continue
+
+        if item == "Sonic" and world.is_knuckles_exclusive():
             continue
 
         if item.startswith("Zone Unlock: "):
@@ -79,9 +98,8 @@ def fill_itempool(world: "Sonic3AIRWorld"):
         for i in range(count):
             world.multiworld.itempool.append(create_item(world, item))
 
-    for i in range(world.total_locations - item_count):
-        # TODO: junk item weights
-        world.multiworld.itempool.append(create_item(world, "10 Rings"))
+    for i in range(get_total_locations(world) - item_count):
+        world.multiworld.itempool.append(create_item(world, get_random_junk(world)))
 
 
 def get_item_count(world: "Sonic3AIRWorld", item: str) -> int:
@@ -93,6 +111,11 @@ def get_item_count(world: "Sonic3AIRWorld", item: str) -> int:
         return 14
 
     return 1
+
+
+def get_random_junk(world: "Sonic3AIRWorld") -> str:
+    return world.random.choices(
+            list(world.options.JunkItemWeights.keys()), list(world.options.JunkItemWeights.values()), k=1)[0]
 
 
 def create_item(world: "Sonic3AIRWorld", name: str) -> Item:

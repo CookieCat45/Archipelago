@@ -1,6 +1,6 @@
 from typing import NamedTuple, Union, Mapping, Any
 from BaseClasses import Item, Tutorial, ItemClassification, MultiWorld
-from .Options import Sonic3AIROptions
+from .Options import Sonic3AIROptions, KnucklesStoryMode, KnucklesGoal, ZoneUnlockMode
 from .Regions import init_regions
 from .Locations import get_location_names
 from .Items import fill_itempool, create_item, item_table
@@ -18,20 +18,28 @@ class Sonic3AIRWorld(World):
 
     def __init__(self, multiworld: "MultiWorld", player: int):
         super().__init__(multiworld, player)
-        self.total_locations = 0
         self.zones_available = []
         self.starting_zone = ""
         self.starting_character = "Sonic"
 
     def generate_early(self) -> None:
-        if self.options.StartingCharacter == self.options.StartingCharacter.option_sonic:
+        if self.options.KnucklesStoryMode.value >= 3:
+            self.starting_character = "Knuckles"
+        elif self.options.StartingCharacter == self.options.StartingCharacter.option_sonic:
             self.starting_character = "Sonic"
         elif self.options.StartingCharacter == self.options.StartingCharacter.option_tails:
             self.starting_character = "Tails"
         elif self.options.StartingCharacter == self.options.StartingCharacter.option_knuckles:
             self.starting_character = "Knuckles"
 
+        if self.options.KnucklesStoryMode == KnucklesStoryMode.option_removed and self.starting_character == "Knuckles":
+            self.starting_character = "Sonic"
+
         self.multiworld.push_precollected(self.create_item(self.starting_character))
+        if self.is_knuckles_exclusive() and self.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary:
+            if self.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
+                # This makes no sense, so change it
+                self.options.ZoneUnlockMode.value = ZoneUnlockMode.option_shuffled
 
     def create_regions(self):
         init_regions(self)
@@ -59,10 +67,21 @@ class Sonic3AIRWorld(World):
             "KnucklesGoal": self.options.KnucklesGoal.value,
             "ShuffleGiantRings": self.options.ShuffleGiantRings.value,
             "DeathLink": self.options.death_link.value,
-            "Seed": self.multiworld.seed,
+            "SpecialSeed": self.random.randint(1, 500000000),
         }
 
         return slot_data
 
     def is_doomsday_goal(self) -> bool:
         return self.options.Goal.value > 0
+
+    def is_doomsday_goal_knuckles(self) -> bool:
+        return self.has_knuckles_goal() and self.options.KnucklesGoal.value >= 1 and self.options.KnucklesGoal.value <= 4
+
+    def has_knuckles_goal(self) -> bool:
+        return (self.options.KnucklesStoryMode != KnucklesStoryMode.option_normal
+                and self.options.KnucklesStoryMode != KnucklesStoryMode.option_removed)
+
+    def is_knuckles_exclusive(self) -> bool:
+        return self.options.KnucklesStoryMode == KnucklesStoryMode.option_exclusive \
+            or self.options.KnucklesStoryMode == KnucklesStoryMode.option_exclusive_tails
