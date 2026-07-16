@@ -3,7 +3,7 @@ from BaseClasses import Item, Tutorial, ItemClassification, MultiWorld
 from .Options import Sonic3AIROptions, KnucklesStoryMode, KnucklesGoal, ZoneUnlockMode
 from .Regions import init_regions
 from .Locations import get_location_names
-from .Items import fill_itempool, create_item, item_table
+from .Items import fill_itempool, create_item, item_table, get_random_junk
 from .Rules import init_rules
 from ..AutoWorld import World, WebWorld
 
@@ -21,6 +21,8 @@ class Sonic3AIRWorld(World):
         self.zones_available = []
         self.starting_zone = ""
         self.starting_character = "Sonic"
+        self.location_char_whitelists = {}
+        self.location_required_items = {}
 
     def generate_early(self) -> None:
         if self.options.KnucklesStoryMode.value >= 3:
@@ -54,7 +56,7 @@ class Sonic3AIRWorld(World):
         return create_item(self, name)
 
     def get_filler_item_name(self) -> str:
-        return "10 Rings"
+        return get_random_junk(self)
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         slot_data = {
@@ -68,6 +70,8 @@ class Sonic3AIRWorld(World):
             "ShuffleGiantRings": self.options.ShuffleGiantRings.value,
             "DeathLink": self.options.death_link.value,
             "SpecialSeed": self.random.randint(1, 500000000),
+            "LocationRequiredItems": self.location_required_items,
+            "LocationCharWhitelists": self.location_char_whitelists
         }
 
         return slot_data
@@ -85,3 +89,32 @@ class Sonic3AIRWorld(World):
     def is_knuckles_exclusive(self) -> bool:
         return self.options.KnucklesStoryMode == KnucklesStoryMode.option_exclusive \
             or self.options.KnucklesStoryMode == KnucklesStoryMode.option_exclusive_tails
+
+    def does_char_exist(self, char: str) -> bool:
+        if char == "Knuckles":
+            return self.options.KnucklesStoryMode != KnucklesStoryMode.option_removed
+        elif char == "Sonic" or char == "Sonic & Tails":
+            return not self.is_knuckles_exclusive()
+        elif char == "Tails":
+            if self.is_knuckles_exclusive():
+                return self.options.KnucklesStoryMode == KnucklesStoryMode.option_exclusive_tails
+        elif char == "Knuckles & Tails":
+            return self.options.KnucklesStoryMode != KnucklesStoryMode.option_exclusive \
+             and self.options.KnucklesStoryMode != KnucklesStoryMode.option_removed
+
+        return True
+
+    @staticmethod
+    def char_name_to_id(name: str) -> int:
+        if name == "Sonic":
+            return 1
+        elif name == "Tails":
+            return 2
+        elif name == "Knuckles":
+            return 3
+        elif name == "Sonic & Tails":
+            return 0
+        elif name == "Knuckles & Tails":
+            return 4
+
+        return -1

@@ -1,4 +1,4 @@
-from enum import IntEnum, IntFlag
+from enum import IntEnum, IntFlag, auto
 from typing import NamedTuple, Optional, List
 from BaseClasses import Location, Item, ItemClassification
 
@@ -13,8 +13,13 @@ class LocData(NamedTuple):
     region: str = ""
     char_whitelist: List = []
     required_items: List = []
-    wall_smash: bool = False  # placeholder for now
+    flags: int = 0
 
 class ItemData(NamedTuple):
     code: Optional[int]
     classification: ItemClassification
+
+class LogicFlags(IntFlag):
+    NONE = 0
+    WALL_SMASH = auto()
+    WALL_SMASH_STRIP = auto()

@@ -2,7 +2,7 @@ from .Locations import get_total_locations
 from .Types import ItemData, Sonic3AIRItem
 from BaseClasses import Location, Item, ItemClassification
 from typing import TYPE_CHECKING, List, Dict, Optional
-from .Options import ZoneUnlockMode, KnucklesStoryMode
+from .Options import ZoneUnlockMode, KnucklesStoryMode, KnucklesGoal
 
 if TYPE_CHECKING:
     from . import Sonic3AIRWorld
@@ -86,6 +86,10 @@ def fill_itempool(world: "Sonic3AIRWorld"):
 
             if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
                 continue
+
+            if world.has_knuckles_goal() and world.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary:
+                if zone == "Sky Sanctuary Zone":
+                    continue
 
             if zone not in world.zones_available:
                 continue

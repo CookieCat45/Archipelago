@@ -32,11 +32,16 @@ def init_rules(world: "Sonic3AIRWorld"):
             i += 1
         else:
             if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
-                pass
                 add_rule(entrance, lambda state:
                     all_zones_complete(state, world, True, True) or all_zones_complete(state, world, True, True, True, True))
             else:
                 add_rule(entrance, lambda state, z=zone: state.has(f"Zone Unlock: {z}", world.player))
+                if zone == "Sky Sanctuary Zone":
+                    if world.has_knuckles_goal() and world.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary:
+                        add_rule(entrance, lambda state: all_zones_complete(state, world, True, False, True, True), "or")
+                        for loc in entrance.connected_region.locations:
+                            if loc.address is not None:
+                                add_rule(loc, lambda state: state.has_any(["Sonic", "Tails"], world.player))
 
         if zone not in single_act_zones:
             if not world.is_knuckles_exclusive():
