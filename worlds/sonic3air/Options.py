@@ -113,17 +113,35 @@ class SpecialStageUnlockItemCount(Range):
     range_end = 14
 
 
-class SpecialStageSphereChecks(Choice):
+class SpecialStageSphereChecks(Range):
     """Adds checks to Special Stages that are cleared by collecting certain amounts of blue spheres.
-    The value of this option determines the percentage of spheres that are necessary to complete a check.
-    For example, if the value is 2:
-    2 / 10 = 0.2 (every 20% of spheres collected in a stage)."""
-    option_0 = 0
-    option_5 = 5
-    option_3 = 3
-    option_2 = 2
-    option_1 = 1
-    default = 3
+    The value of this option determines every X0% of spheres collected that will become a check.
+    For example, a value of 2 would result in every 20% of spheres becoming a check."""
+    range_start = 0
+    range_end = 10
+    default = 2
+
+
+class SpecialStageRingChecks(Range):
+    """Adds checks to Special Stages that are cleared by collecting certain amounts of rings.
+    The value of this option determines every X0% of rings collected that will become a check.
+    For example, a value of 2 would result in every 20% of rings becoming a check."""
+    range_start = 0
+    range_end = 10
+
+
+class SpecialStageSphereChecksLimit(Range):
+    """Percentage limit for the threshold of sphere checks available."""
+    range_start = 0
+    range_end = 10
+    default = 10
+
+
+class SpecialStageRingChecksLimit(Range):
+    """Percentage limit for the threshold of ring checks available."""
+    range_start = 0
+    range_end = 10
+    default = 10
 
 
 class JunkItemWeights(OptionDict):
@@ -138,20 +156,6 @@ class JunkItemWeights(OptionDict):
         "Invincibility": 5,
     }
 
-
-class SpecialStageRingChecks(Choice):
-    """Adds checks to Special Stages that are cleared by collecting certain amounts of rings.
-    The value of this option determines the percentage of rings that are necessary to complete a check.
-    For example, if the value is 2:
-    2 / 10 = 0.2 (every 20% of rings collected in a stage)."""
-    option_0 = 0
-    option_5 = 5
-    option_3 = 3
-    option_2 = 2
-    option_1 = 1
-    default = 0
-
-
 @dataclass
 class Sonic3AIROptions(PerGameCommonOptions):
     StartingCharacter: StartingCharacter
@@ -165,6 +169,8 @@ class Sonic3AIROptions(PerGameCommonOptions):
     SpecialStageUnlockItemCount: SpecialStageUnlockItemCount
     SpecialStageSphereChecks: SpecialStageSphereChecks
     SpecialStageRingChecks: SpecialStageRingChecks
+    SpecialStageSphereChecksLimit: SpecialStageSphereChecksLimit
+    SpecialStageRingChecksLimit: SpecialStageRingChecksLimit
     JunkItemWeights: JunkItemWeights
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink

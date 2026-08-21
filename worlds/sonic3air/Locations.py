@@ -32,7 +32,7 @@ giant_rings = {
     "Marble Garden Zone: Act 1 - Giant Ring (Top Path, Left Pointing Sign on Ledge)":
         LocData(113248572, "Marble Garden Zone: Act 1"),
     "Marble Garden Zone: Act 1 - Giant Ring (Top Path, Behind Extra Life, Requires Tails)":
-        LocData(222300092, "Marble Garden Zone: Act 1", char_whitelist=["Tails"]),
+        LocData(222300092, "Marble Garden Zone: Act 1", char_whitelist=["Tails", "Sonic & Tails", "Knuckles & Tails"]),
     "Marble Garden Zone: Act 1 - Giant Ring (Top Path, Behind Breakable Wall)":
         LocData(264243772, "Marble Garden Zone: Act 1", flags=LogicFlags.WALL_SMASH),
     "Marble Garden Zone: Act 1 - Giant Ring (Left of Right Arrow Sign on Ledge)":
@@ -45,7 +45,7 @@ giant_rings = {
         LocData(448791740, "Marble Garden Zone: Act 1"),
 
     "Marble Garden Zone: Act 2 - Giant Ring (Top Area, Requires Tails)":
-        LocData(138413248, "Marble Garden Zone: Act 2", char_whitelist=["Tails"]),
+        LocData(138413248, "Marble Garden Zone: Act 2", char_whitelist=["Tails", "Sonic & Tails", "Knuckles & Tails"]),
     "Marble Garden Zone: Act 2 - Giant Ring (Bottom Area, Past Spike Crusher)":
         LocData(356518208, "Marble Garden Zone: Act 2"),
     "Marble Garden Zone: Act 2 - Giant Ring (Left of Crumbling Floor)":
@@ -146,7 +146,7 @@ giant_rings = {
     "Sandopolis Zone: Act 1 - Giant Ring (Below Sand Slide, Above Sand Pit)":
         LocData(473958576, "Sandopolis Zone: Act 1"),
     "Sandopolis Zone: Act 1 - Giant Ring (Upper Area, Requires Tails)":
-        LocData(624951600, "Sandopolis Zone: Act 1", char_whitelist=["Tails"]),
+        LocData(624951600, "Sandopolis Zone: Act 1", char_whitelist=["Tails", "Sonic & Tails", "Knuckles & Tails"]),
     "Sandopolis Zone: Act 1 - Giant Ring (Behind Moving Spike Pillar)":
         LocData(683672880, "Sandopolis Zone: Act 1"),
     "Sandopolis Zone: Act 1 - Giant Ring (Near Protruding Spikes)":
@@ -168,7 +168,7 @@ giant_rings = {
     "Lava Reef Zone: Act 1 - Giant Ring (Sonic/Tails Route, Right of Falling Spikes Platform)":
         LocData(381683136, "Lava Reef Zone: Act 1", char_whitelist=["Sonic", "Tails"]),
     "Lava Reef Zone: Act 1 - Giant Ring (Above Checkpoint with Rings, Requires Tails)":
-        LocData(440402492, "Lava Reef Zone: Act 1", char_whitelist=["Tails"]),
+        LocData(440402492, "Lava Reef Zone: Act 1", char_whitelist=["Tails", "Sonic & Tails"]),
 
     "Lava Reef Zone: Act 2 - Giant Ring (Knuckles Route, Left of Spike Platform Conveyor)":
         LocData(339741504, "Lava Reef Zone: Act 2", char_whitelist=["Knuckles"]),

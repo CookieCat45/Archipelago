@@ -57,8 +57,8 @@ def init_regions(world: "Sonic3AIRWorld"):
                                                       f"-> Special Stage {i+1}", special_stage_region)
 
             if world.options.SpecialStageSphereChecks.value > 0:
-                increment = 10 // world.options.SpecialStageSphereChecks.value
-                for a in range(10):
+                increment = world.options.SpecialStageSphereChecks.value
+                for a in range(world.options.SpecialStageSphereChecksLimit.value):
                     if (a+1) % increment != 0:
                         sphere_loc_id += 2
                         continue
@@ -69,8 +69,8 @@ def init_regions(world: "Sonic3AIRWorld"):
                     sphere_loc_id += 2
 
             if world.options.SpecialStageRingChecks.value > 0:
-                increment = 10 // world.options.SpecialStageRingChecks.value
-                for a in range(10):
+                increment = world.options.SpecialStageRingChecks.value
+                for a in range(world.options.SpecialStageRingChecksLimit.value):
                     if (a+1) % increment != 0:
                         ring_loc_id += 2
                         continue
@@ -194,6 +194,11 @@ def create_region(world: "Sonic3AIRWorld", name: str) -> Region:
             reg.locations.append(location)
             if len(data.char_whitelist) > 0:
                 world.location_char_whitelists[data.id] = [world.char_name_to_id(n) for n in data.char_whitelist]
+                if "Sonic & Tails" not in data.char_whitelist and "Sonic" in data.char_whitelist:
+                    world.location_char_whitelists[data.id].append(world.char_name_to_id("Sonic & Tails"))
+                if "Knuckles & Tails" not in data.char_whitelist and "Knuckles" in data.char_whitelist:
+                    world.location_char_whitelists[data.id].append(world.char_name_to_id("Knuckles & Tails"))
+
             if len(data.required_items) > 0:
                 world.location_required_items[data.id] = data.required_items
 
