@@ -182,6 +182,52 @@ giant_rings = {
         LocData(641730112, "Lava Reef Zone: Act 2", char_whitelist=["Sonic", "Tails"]),
 }
 
+monitors = {
+    "Angel Island Zone: Act 1 - Monitor (Knuckles Spawn Area - Far Left)": LocData(378535944, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Knuckles Spawn Area - Loop Top #1)": LocData(442499075, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Knuckles Spawn Area - Loop Top #2)": LocData(440664067, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Knuckles Spawn Area - Top of Tree)": LocData(541327365, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Secret Area Near Beginning #1)": LocData(397410307, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Secret Area Near Beginning #2)": LocData(395313156, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Right of 3 Rock Piles)": LocData(573308936, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Below Waterfall)": LocData(601096199, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Below Pushable Rock #1)": LocData(681836547, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Below Pushable Rock #2)": LocData(683671560, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Below Pushable Rock #3)": LocData(685506563, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Left of Big Tree, Top of Loop)": LocData(725090307, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Big Tree Branch)": LocData(745537537, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Burning Area - Above Waterfall, Requires Tails #1)": LocData(84934659, "Angel Island Zone: Act 1",
+                                                                                                       char_whitelist=["Tails", "Sonic & Tails", "Knuckles & Tails"]),
+    "Angel Island Zone: Act 1 - Monitor (Burning Area - Above Waterfall, Requires Tails #2)": LocData(135331848,
+                                                                                                      "Angel Island Zone: Act 1",
+                                                                                                      char_whitelist=["Tails","Sonic & Tails","Knuckles & Tails"]),
+
+    "Angel Island Zone: Act 1 - Monitor (Burning Area - Top of Loop with Platform)": LocData(213385222, "Angel Island Zone: Act 1"),
+    "Angel Island Zone: Act 1 - Monitor (Burning Area - Sonic/Tails Route, Behind Enemy)": LocData(231735301, "Angel Island Zone: Act 1",
+                                                                                                   char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
+    "Angel Island Zone: Act 1 - Monitor (Burning Area - Right of Loop)": LocData(231735299, "Angel Island Zone: Act 1"),
+
+    "Hidden Palace Zone - Monitor (Right of Teleporter)": LocData(204472323, "Hidden Palace Zone", char_whitelist=["Sonic", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #1)": LocData(57671684, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #2)": LocData(55574536, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #3)": LocData(53477383, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #4)": LocData(51380230, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #5)": LocData(49283077, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #6)": LocData(47185923, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #7)": LocData(158334979, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #8)": LocData(160432131, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+    "Hidden Palace Zone - Monitor (Tails Secret Area #9)": LocData(162529281, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+}
+
+sign_monitors = {
+    "Angel Island Zone: Act 1 - Signpost Monitor (Sonic/Tails Route #1)": LocData(300417031, "Angel Island Zone: Act 1", char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
+    "Angel Island Zone: Act 1 - Signpost Monitor (Sonic/Tails Route #2)": LocData(288358408, "Angel Island Zone: Act 1", char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
+    "Angel Island Zone: Act 1 - Signpost Monitor (Sonic/Tails Route #3)": LocData(293339141, "Angel Island Zone: Act 1", char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
+    "Angel Island Zone: Act 1 - Signpost Monitor (Knuckles Route #1)": LocData(296747009, "Angel Island Zone: Act 1", char_whitelist=["Knuckles"]),
+    "Angel Island Zone: Act 1 - Signpost Monitor (Knuckles Route #2)": LocData(289406984, "Angel Island Zone: Act 1", char_whitelist=["Knuckles"]),
+    "Angel Island Zone: Act 1 - Signpost Monitor (Knuckles Route #3)": LocData(292552711, "Angel Island Zone: Act 1", char_whitelist=["Knuckles"]),
+}
+
 act_completions = {
     "Angel Island Zone: Act 1 - Complete": LocData(1000, "Angel Island Zone: Act 1"),
     "Angel Island Zone: Act 2 - Complete": LocData(1500, "Angel Island Zone: Act 2"),
@@ -213,6 +259,8 @@ act_completions = {
 location_table = {
     **giant_rings,
     **act_completions,
+    #**monitors,
+    #**sign_monitors
 }
 
 def get_total_locations(world: "Sonic3AIRWorld") -> int:

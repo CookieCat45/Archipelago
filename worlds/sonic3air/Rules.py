@@ -22,6 +22,7 @@ def init_rules(world: "Sonic3AIRWorld"):
             add_rule(loc, lambda state, l=data.required_items: state.has_all(l, world.player))
 
     i = 1
+    prev_zone = ""
     for zone in zones:
         if zone not in world.zones_available:
             continue
@@ -29,6 +30,22 @@ def init_rules(world: "Sonic3AIRWorld"):
         entrance = world.multiworld.get_entrance(f"{zone} Entrance", world.player)
         if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
             add_rule(entrance, lambda state, c=i: state.has("Progressive Zone Unlock", world.player, c))
+            if zone != "Doomsday Zone":
+                if prev_zone != "":
+                    # The previous zone needs to be completed too
+                    item_name: str
+                    if prev_zone not in single_act_zones:
+                        item_name = f"Act Complete ({prev_zone}: Act 2)"
+                    else:
+                        item_name = f"Act Complete ({prev_zone})"
+
+                    if not world.is_knuckles_exclusive():
+                        add_rule(entrance, lambda state, n=item_name: state.has(n, world.player))
+                    if world.has_knuckles_goal():
+                        add_rule(entrance, lambda state, n=item_name: state.has(f"Knuckles {n}", world.player))
+
+                prev_zone = zone
+
             i += 1
         else:
             if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":

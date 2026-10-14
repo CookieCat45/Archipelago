@@ -82,9 +82,9 @@ def init_regions(world: "Sonic3AIRWorld"):
 
     if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
         world.zones_available = deepcopy(zones)
-        for zone in world.zones_available:
+        for zone in zones:
             # Purge any zones not in the option list
-            if zone not in world.options.ZonesAllowed.value:
+            if zone in world.zones_available and zone not in world.options.ZonesAllowed.value:
                 world.zones_available.remove(zone)
     else:
         # shuffle mode
@@ -150,7 +150,12 @@ def init_regions(world: "Sonic3AIRWorld"):
 
 def create_region(world: "Sonic3AIRWorld", name: str) -> Region:
     reg = Region(name, world.player, world.multiworld)
+
+    # Gather matching locations for this region
     for (key, data) in location_table.items():
+        if data.region != name:
+            continue
+
         if not world.options.ShuffleGiantRings and key in giant_rings:
             continue
 
@@ -161,46 +166,46 @@ def create_region(world: "Sonic3AIRWorld", name: str) -> Region:
                     exists = True
                     break
 
-            # No character for this location exists, skip
+            # No character that can reach this location exists, skip
             if not exists:
                 continue
 
-        if data.region == name:
-            if key in act_completions:
-                # add event(s) for act completion
-                event = None
-                if not world.is_knuckles_exclusive() and (world.is_doomsday_goal() or name != "Doomsday Zone"):
-                    act_event_name = f"Act Complete ({name})"
-                    event = Sonic3AIRLocation(world.player, act_event_name, None, reg)
-                    event.place_locked_item(Sonic3AIRItem(act_event_name, ItemClassification.progression, None, world.player))
-                    event.show_in_spoiler = False
+        if key in act_completions:
+            # add event(s) for act completion
+            event = None
+            if not world.is_knuckles_exclusive() and (world.is_doomsday_goal() or name != "Doomsday Zone"):
+                act_event_name = f"Act Complete ({name})"
+                event = Sonic3AIRLocation(world.player, act_event_name, None, reg)
+                event.place_locked_item(Sonic3AIRItem(act_event_name, ItemClassification.progression, None, world.player))
+                event.show_in_spoiler = False
 
-                if world.has_knuckles_goal():
-                    if event is not None:
-                        add_rule(event, lambda state: state.has_any(["Sonic", "Tails"], world.player))
-                    if world.is_doomsday_goal_knuckles() or name != "Doomsday Zone":
-                        act_event_name = f"Knuckles Act Complete ({name})"
-                        event2 = Sonic3AIRLocation(world.player, act_event_name, None, reg)
-                        event2.place_locked_item(
-                            Sonic3AIRItem(act_event_name, ItemClassification.progression, None, world.player))
-                        event2.show_in_spoiler = False
-                        add_rule(event2, lambda state: state.has("Knuckles", world.player))
-                        reg.locations.append(event2)
-
+            if world.has_knuckles_goal():
                 if event is not None:
-                    reg.locations.append(event)
+                    # we need Sonic/Tails to complete their version of the act since it's separate now
+                    add_rule(event, lambda state: state.has_any(["Sonic", "Tails"], world.player))
+                if world.is_doomsday_goal_knuckles() or name != "Doomsday Zone":
+                    act_event_name = f"Knuckles Act Complete ({name})"
+                    event2 = Sonic3AIRLocation(world.player, act_event_name, None, reg)
+                    event2.place_locked_item(
+                        Sonic3AIRItem(act_event_name, ItemClassification.progression, None, world.player))
+                    event2.show_in_spoiler = False
+                    add_rule(event2, lambda state: state.has("Knuckles", world.player))
+                    reg.locations.append(event2)
 
-            location = Sonic3AIRLocation(world.player, key, data.id, reg)
-            reg.locations.append(location)
-            if len(data.char_whitelist) > 0:
-                world.location_char_whitelists[data.id] = [world.char_name_to_id(n) for n in data.char_whitelist]
-                if "Sonic & Tails" not in data.char_whitelist and "Sonic" in data.char_whitelist:
-                    world.location_char_whitelists[data.id].append(world.char_name_to_id("Sonic & Tails"))
-                if "Knuckles & Tails" not in data.char_whitelist and "Knuckles" in data.char_whitelist:
-                    world.location_char_whitelists[data.id].append(world.char_name_to_id("Knuckles & Tails"))
+            if event is not None:
+                reg.locations.append(event)
 
-            if len(data.required_items) > 0:
-                world.location_required_items[data.id] = data.required_items
+        location = Sonic3AIRLocation(world.player, key, data.id, reg)
+        reg.locations.append(location)
+        if len(data.char_whitelist) > 0:
+            world.location_char_whitelists[data.id] = [world.char_name_to_id(n) for n in data.char_whitelist]
+            if "Sonic & Tails" not in data.char_whitelist and "Sonic" in data.char_whitelist:
+                world.location_char_whitelists[data.id].append(world.char_name_to_id("Sonic & Tails"))
+            if "Knuckles & Tails" not in data.char_whitelist and "Knuckles" in data.char_whitelist:
+                world.location_char_whitelists[data.id].append(world.char_name_to_id("Knuckles & Tails"))
+
+        if len(data.required_items) > 0:
+            world.location_required_items[data.id] = data.required_items
 
     world.multiworld.regions.append(reg)
     return reg

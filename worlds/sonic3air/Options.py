@@ -15,7 +15,8 @@ class StartingCharacter(Choice):
 
 class ZoneUnlockMode(Choice):
     """Determines how zone unlocking works.
-    linear: Zones are unlocked in the vanilla order through a progressive item. You start with Angel Island Zone (or whatever is earliest).
+    linear: Zones are unlocked via progressive items, with the unlock order determined by the ZonesAllowed option list.
+        You start with the first zone in the list. To progress, the zones must be completed in order.
     shuffled: Individual zone unlocks are shuffled into the item pool. You start with a random zone.
     shuffled_deathegg: Same as shuffled, but locks Death Egg Zone until all other zones are completed,
         and removes Death Egg Zone from the item pool.
@@ -93,7 +94,8 @@ class KnucklesGoal(Choice):
     doomsday_hyper: Collect all Chaos + Super Emeralds and finish Doomsday Zone
     allzones_doomsday: Complete all zones, collect all Chaos Emeralds and finish Doomsday Zone
     allzones_doomsday_hyper: Complete all zones, collect all Chaos + Super Emeralds and finish Doomsday Zone
-    allzones_sanctuary: Same as 'allzones', but Sky Sanctuary will always be the last completable zone for Knuckles, and will be the Mecha Sonic boss for him"""
+    allzones_sanctuary: Same as 'allzones', but Sky Sanctuary will always be the last completable zone for Knuckles,
+        and will be the Mecha Sonic boss for him"""
     option_allzones = 0
     option_doomsday = 1
     option_doomsday_hyper = 2
@@ -131,14 +133,14 @@ class SpecialStageRingChecks(Range):
 
 
 class SpecialStageSphereChecksLimit(Range):
-    """Percentage limit for the threshold of sphere checks available."""
+    """Limit for the threshold of sphere checks available (X0%)."""
     range_start = 0
     range_end = 10
     default = 10
 
 
 class SpecialStageRingChecksLimit(Range):
-    """Percentage limit for the threshold of ring checks available."""
+    """Limit for the threshold of ring checks available (X0%)."""
     range_start = 0
     range_end = 10
     default = 10
@@ -156,6 +158,14 @@ class JunkItemWeights(OptionDict):
         "Invincibility": 5,
     }
 
+
+class GiantRingRewardCount(Range):
+    """The amount of rings that should be received when collecting a giant ring."""
+    range_start = 0
+    range_end = 100
+    default = 50
+
+
 @dataclass
 class Sonic3AIROptions(PerGameCommonOptions):
     StartingCharacter: StartingCharacter
@@ -172,5 +182,6 @@ class Sonic3AIROptions(PerGameCommonOptions):
     SpecialStageSphereChecksLimit: SpecialStageSphereChecksLimit
     SpecialStageRingChecksLimit: SpecialStageRingChecksLimit
     JunkItemWeights: JunkItemWeights
+    GiantRingRewardCount: GiantRingRewardCount
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink

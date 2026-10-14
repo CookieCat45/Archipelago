@@ -25,7 +25,7 @@ class Sonic3AIRWorld(World):
         self.location_required_items = {}
 
     def generate_early(self) -> None:
-        if self.options.KnucklesStoryMode.value >= 3:
+        if self.is_knuckles_exclusive():
             self.starting_character = "Knuckles"
         elif self.options.StartingCharacter == self.options.StartingCharacter.option_sonic:
             self.starting_character = "Sonic"
@@ -38,6 +38,7 @@ class Sonic3AIRWorld(World):
             self.starting_character = "Sonic"
 
         self.multiworld.push_precollected(self.create_item(self.starting_character))
+
         if self.is_knuckles_exclusive() and self.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary:
             if self.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
                 # This makes no sense, so change it
@@ -68,6 +69,7 @@ class Sonic3AIRWorld(World):
             "KnucklesStoryMode": self.options.KnucklesStoryMode.value,
             "KnucklesGoal": self.options.KnucklesGoal.value,
             "ShuffleGiantRings": self.options.ShuffleGiantRings.value,
+            "GiantRingRewardCount": self.options.GiantRingRewardCount.value,
             "DeathLink": self.options.death_link.value,
             "SpecialSeed": self.random.randint(1, 500000000),
             "LocationRequiredItems": self.location_required_items,
