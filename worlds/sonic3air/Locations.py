@@ -201,11 +201,25 @@ monitors = {
     "Angel Island Zone: Act 1 - Monitor (Burning Area - Above Waterfall, Requires Tails #2)": LocData(135331848,
                                                                                                       "Angel Island Zone: Act 1",
                                                                                                       char_whitelist=["Tails","Sonic & Tails","Knuckles & Tails"]),
-
     "Angel Island Zone: Act 1 - Monitor (Burning Area - Top of Loop with Platform)": LocData(213385222, "Angel Island Zone: Act 1"),
     "Angel Island Zone: Act 1 - Monitor (Burning Area - Sonic/Tails Route, Behind Enemy)": LocData(231735301, "Angel Island Zone: Act 1",
                                                                                                    char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
     "Angel Island Zone: Act 1 - Monitor (Burning Area - Right of Loop)": LocData(231735299, "Angel Island Zone: Act 1"),
+
+    "IceCap Zone: Act 1 - Monitor (Above First Red Spring)": LocData(1217986566, "IceCap Zone: Act 1"),
+    "IceCap Zone: Act 1 - Monitor (Bottom of Slide, Near Spikes)": LocData(1408237571, "IceCap Zone: Act 1"),
+    "IceCap Zone: Act 1 - Monitor (Knuckles Route, Near Spike Balls)": LocData(1330118662, "IceCap Zone: Act 1", char_whitelist=["Knuckles"]),
+    "IceCap Zone: Act 1 - Monitor (Sonic/Tails Route, Before Boss)": LocData(1330118662, "IceCap Zone: Act 1", char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
+
+    "IceCap Zone: Act 2 - Monitor (Sonic/Tails Route, Near Start)": LocData(201850886, "IceCap Zone: Act 2", char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
+    "IceCap Zone: Act 2 - Monitor (Sonic/Tails Route, Hidden in Wall)": LocData(483393544, "IceCap Zone: Act 2", char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
+    "IceCap Zone: Act 2 - Monitor (Sonic/Tails Route, Next to Frozen Switch)": LocData(538968065, "IceCap Zone: Act 2", char_whitelist=["Sonic", "Tails", "Knuckles & Tails"]),
+    "IceCap Zone: Act 2 - Monitor (Underground, Frozen Near Trampoline #1)": LocData(885719042, "IceCap Zone: Act 2"),
+    "IceCap Zone: Act 2 - Monitor (Underground, Frozen Near Trampoline #2)": LocData(882573314, "IceCap Zone: Act 2"),
+    "IceCap Zone: Act 2 - Monitor (Frozen Above Trampoline Pit #1)": LocData(870318083, "IceCap Zone: Act 2"),
+    "IceCap Zone: Act 2 - Monitor (Frozen Above Trampoline Pit #2)": LocData(867172358, "IceCap Zone: Act 2"),
+    "IceCap Zone: Act 2 - Monitor (Frozen Above Trampoline Pit #3)": LocData(927465475, "IceCap Zone: Act 2"),
+    "IceCap Zone: Act 2 - Monitor (Near End, Left of Top Bridge)": LocData(888406017, "IceCap Zone: Act 2"),
 
     "Hidden Palace Zone - Monitor (Right of Teleporter)": LocData(204472323, "Hidden Palace Zone", char_whitelist=["Sonic", "Tails"]),
     "Hidden Palace Zone - Monitor (Tails Secret Area #1)": LocData(57671684, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
@@ -217,6 +231,23 @@ monitors = {
     "Hidden Palace Zone - Monitor (Tails Secret Area #7)": LocData(158334979, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
     "Hidden Palace Zone - Monitor (Tails Secret Area #8)": LocData(160432131, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
     "Hidden Palace Zone - Monitor (Tails Secret Area #9)": LocData(162529281, "Hidden Palace Zone", char_whitelist=["Sonic & Tails", "Tails"]),
+
+    "Sky Sanctuary Zone - Monitor (Near Beginning)": LocData(246415366, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Inside Tower w/Spring)": LocData(180355080, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Hidden in Tall Tower, Requires Tails or Knuckles #1)": LocData(322961411, "Sky Sanctuary Zone", char_whitelist=["Sonic & Tails", "Tails", "Knuckles"]),
+    "Sky Sanctuary Zone - Monitor (Hidden in Tall Tower, Requires Tails or Knuckles #2)": LocData(325058561, "Sky Sanctuary Zone", char_whitelist=["Sonic & Tails", "Tails", "Knuckles"]),
+    "Sky Sanctuary Zone - Monitor (After 1st Boss, Below Falling Bridge)": LocData(50331655, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Below Ground #1)": LocData(145752067, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Below Ground #2)": LocData(143654915, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Left of Teleporter #1)": LocData(256901123, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Left of Teleporter #2)": LocData(254803976, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Near Moving Ground)": LocData(251658243, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Near Spinning Platform)": LocData(224657413, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (After 2nd Boss, Below Checkpoint)": LocData(344981505, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Near Moving Bar #1)": LocData(191889411, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Near Moving Bar #2)": LocData(189792259, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Behind Non-Solid Wall)": LocData(169869313, "Sky Sanctuary Zone"),
+    "Sky Sanctuary Zone - Monitor (Before 3rd Boss, Below Crumbling Bridge)": LocData(282066947, "Sky Sanctuary Zone"),
 }
 
 sign_monitors = {

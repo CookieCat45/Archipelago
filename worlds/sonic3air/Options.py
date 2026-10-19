@@ -26,21 +26,9 @@ class ZoneUnlockMode(Choice):
     option_shuffled_deathegg = 2
 
 
-class ZoneCount(Range):
-    """Determines the total number of zones available.
-    If this value is below the number of zones in the ZonesAllowed list, available zones will be chosen at random.
-    This option only applies if ZoneUnlockMode is set to something other than linear."""
-    range_start = 1
-    range_end = 13
-    default = 13
-
-
 class ZonesAllowed(OptionList):
     """List of zone names to allow in the game (excluding Doomsday Zone which is conditional)
-    If playing in linear mode, missing zones will be skipped.
-    If playing in shuffled mode, missing zones will not be added to the item pool.
-    Note that some other options may force certain zones
-    to exist anyway regardless of this list (Death Egg, Sky Sanctuary)"""
+    Note that some other options may force certain zones to exist anyway regardless of this list (Death Egg, Sky Sanctuary)"""
     default = (
         "Angel Island Zone",
         "Hydrocity Zone",
@@ -56,6 +44,19 @@ class ZonesAllowed(OptionList):
         "Sky Sanctuary Zone",
         "Death Egg Zone",
     )
+
+
+class RandomZoneCount(Range):
+    """Determines the number of random zones to add from the RandomZoneList option."""
+    range_start = 0
+    range_end = 13
+    default = 0
+
+
+class RandomZoneList(OptionList):
+    """When RandomZoneCount is greater than 0, a pool from this list will be selected and added to the list of allowed zones.
+    The zones will be inserted into the list at random locations."""
+    default = ()
 
 
 class Goal(Choice):
@@ -147,7 +148,17 @@ class SpecialStageRingChecksLimit(Range):
 
 
 class JunkItemWeights(OptionDict):
-    """Weights for junk items to be added to the pool"""
+    """Weights for junk items to be added to the pool.
+    This can include the following items:
+    - 10 Rings
+    - Extra Life
+    - Fire Shield
+    - Bubble Shield
+    - Electric Shield
+    - Speed Shoes
+    - Invincibility
+    - Spring Trap (Spawns a spring in front of the direction that the player is moving)
+    - Missile Trap (Spawns multiple homing missiles that chase the player throughout the level)"""
     default = {
         "10 Rings": 50,
         "Extra Life": 10,
@@ -156,6 +167,8 @@ class JunkItemWeights(OptionDict):
         "Electric Shield": 10,
         "Speed Shoes": 5,
         "Invincibility": 5,
+        "Spring Trap": 0,
+        "Missile Trap": 0,
     }
 
 
@@ -170,8 +183,9 @@ class GiantRingRewardCount(Range):
 class Sonic3AIROptions(PerGameCommonOptions):
     StartingCharacter: StartingCharacter
     ZoneUnlockMode: ZoneUnlockMode
-    ZoneCount: ZoneCount
     ZonesAllowed: ZonesAllowed
+    RandomZoneList: RandomZoneList
+    RandomZoneCount: RandomZoneCount
     Goal: Goal
     KnucklesStoryMode: KnucklesStoryMode
     KnucklesGoal: KnucklesGoal

@@ -18,7 +18,6 @@ class Sonic3AIRWorld(World):
 
     def __init__(self, multiworld: "MultiWorld", player: int):
         super().__init__(multiworld, player)
-        self.zones_available = []
         self.starting_zone = ""
         self.starting_character = "Sonic"
         self.location_char_whitelists = {}
@@ -43,6 +42,11 @@ class Sonic3AIRWorld(World):
             if self.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
                 # This makes no sense, so change it
                 self.options.ZoneUnlockMode.value = ZoneUnlockMode.option_shuffled
+
+        if "Doomsday Zone" in self.options.ZonesAllowed.value:
+            self.options.ZonesAllowed.value.remove("Doomsday Zone")
+        if "Doomsday Zone" in self.options.RandomZoneList.value:
+            self.options.RandomZoneList.value.remove("Doomsday Zone")
 
     def create_regions(self):
         init_regions(self)

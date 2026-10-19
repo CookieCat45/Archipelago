@@ -7,16 +7,6 @@ from .Options import ZoneUnlockMode, KnucklesStoryMode, KnucklesGoal
 if TYPE_CHECKING:
     from . import Sonic3AIRWorld
 
-items_junk = {
-    "10 Rings": ItemData(2020300001, ItemClassification.filler),
-    "Extra Life": ItemData(2020300002, ItemClassification.filler),
-    "Fire Shield": ItemData(2020300003, ItemClassification.filler),
-    "Bubble Shield": ItemData(2020300004, ItemClassification.filler),
-    "Electric Shield": ItemData(2020300005, ItemClassification.filler),
-    "Invincibility": ItemData(2020300006, ItemClassification.filler),
-    "Speed Shoes": ItemData(2020300007, ItemClassification.filler),
-}
-
 items_characters = {
     "Sonic": ItemData(2020300008, ItemClassification.progression),
     "Tails": ItemData(2020300009, ItemClassification.progression),
@@ -41,8 +31,16 @@ items_zones = {
     "Progressive Special Stage Unlock": ItemData(2020300025, ItemClassification.progression),
 }
 
-items_traps = {
-
+items_junk = {
+    "10 Rings": ItemData(2020300001, ItemClassification.filler),
+    "Extra Life": ItemData(2020300002, ItemClassification.filler),
+    "Fire Shield": ItemData(2020300003, ItemClassification.filler),
+    "Bubble Shield": ItemData(2020300004, ItemClassification.filler),
+    "Electric Shield": ItemData(2020300005, ItemClassification.filler),
+    "Invincibility": ItemData(2020300006, ItemClassification.filler),
+    "Speed Shoes": ItemData(2020300007, ItemClassification.filler),
+    "Spring Trap": ItemData(2020300027, ItemClassification.trap),
+    "Missile Trap": ItemData(2020300028, ItemClassification.trap),
 }
 
 items_misc = {
@@ -51,7 +49,6 @@ items_misc = {
 
 item_table = {
     **items_junk,
-    **items_traps,
     **items_characters,
     **items_zones,
     **items_misc,
@@ -91,7 +88,7 @@ def fill_itempool(world: "Sonic3AIRWorld"):
                 if zone == "Sky Sanctuary Zone":
                     continue
 
-            if zone not in world.zones_available:
+            if zone not in world.options.ZonesAllowed.value:
                 continue
 
         if world.options.ZoneUnlockMode != ZoneUnlockMode.option_linear and item == "Progressive Zone Unlock":
@@ -108,7 +105,7 @@ def fill_itempool(world: "Sonic3AIRWorld"):
 
 def get_item_count(world: "Sonic3AIRWorld", item: str) -> int:
     if item == "Progressive Zone Unlock":
-        return len(world.zones_available)-1
+        return len(world.options.ZonesAllowed.value)-1
     elif item == "Progressive Special Stage Unlock":
         return world.options.SpecialStageUnlockItemCount.value
     elif item == "Chaos Emerald":

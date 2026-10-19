@@ -5,7 +5,6 @@ from .Items import create_item
 from worlds.generic.Rules import add_rule, set_rule
 from .Options import ZoneUnlockMode, KnucklesStoryMode, KnucklesGoal
 from .Types import Sonic3AIRLocation, Sonic3AIRItem
-from copy import deepcopy
 
 if TYPE_CHECKING:
     from . import Sonic3AIRWorld
@@ -25,7 +24,7 @@ zones = [
     "Hidden Palace Zone",
     "Sky Sanctuary Zone",
     "Death Egg Zone",
-    # "Doomsday Zone"
+    "Doomsday Zone"
 ]
 
 single_act_zones = [
@@ -34,28 +33,16 @@ single_act_zones = [
     "Doomsday Zone"
 ]
 
-no_giantring_zones = [
-    "Sky Sanctuary Zone",
-    "Hidden Palace Zone",
-    "Death Egg Zone",
-    "Doomsday Zone"
-]
-
 def init_regions(world: "Sonic3AIRWorld"):
     menu = create_region(world, "Menu")
     create_char_events(world)
-    special_stage_region = None
-    knuckles_sanctuary: bool = (world.has_knuckles_goal()
-                                and world.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary)
-
+    knuckles_sanctuary: bool = (world.has_knuckles_goal() and world.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary)
     if world.options.SpecialStageUnlockItemCount > 0:
-        special_stage_region = create_region(world, "Special Stages")
+        special_stage_region = create_region_and_connect(world, "Special Stages", " -> Special Stages", menu)
         sphere_loc_id = 1
         ring_loc_id = 2
         for i in range(world.options.SpecialStageUnlockItemCount):
-            special_stage = create_region_and_connect(world, f"Special Stage {i+1}",
-                                                      f"-> Special Stage {i+1}", special_stage_region)
-
+            special_stage = create_region_and_connect(world, f"Special Stage {i+1}", f"-> Special Stage {i+1}", special_stage_region)
             if world.options.SpecialStageSphereChecks.value > 0:
                 increment = world.options.SpecialStageSphereChecks.value
                 for a in range(world.options.SpecialStageSphereChecksLimit.value):
@@ -80,71 +67,56 @@ def init_regions(world: "Sonic3AIRWorld"):
                     special_stage.locations.append(location)
                     ring_loc_id += 2
 
-    if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
-        world.zones_available = deepcopy(zones)
-        for zone in zones:
-            # Purge any zones not in the option list
-            if zone in world.zones_available and zone not in world.options.ZonesAllowed.value:
-                world.zones_available.remove(zone)
-    else:
-        # shuffle mode
-        world.zones_available = world.options.ZonesAllowed.value
+    random_count = world.options.RandomZoneCount.value
+    random_list = world.options.RandomZoneList.value
+    while random_count > 0 and len(random_list) > 0 and len(world.options.ZonesAllowed.value) < 13:
+        random_zone = random_list[world.random.randint(0, len(random_list) - 1)]
+        random_list.remove(random_zone)
+        if random_zone not in world.options.ZonesAllowed.value:
+            if len(world.options.ZonesAllowed.value) == 0:
+                world.options.ZonesAllowed.value.append(random_zone)
+            else:
+                world.options.ZonesAllowed.value.insert(world.random.randint(0, len(world.options.ZonesAllowed.value)-1), random_zone)
+            random_count -= 1
 
-        # Shuffle and truncate
-        world.random.shuffle(world.zones_available)
-        del world.zones_available[world.options.ZoneCount:]
-        for zone in world.options.ZonesAllowed.value:
-            if zone not in world.zones_available:
-                world.options.ZonesAllowed.value.remove(zone)
+    # Add Sky Sanctuary for Knuckles if relevant
+    if knuckles_sanctuary and "Sky Sanctuary Zone" not in world.options.ZonesAllowed.value:
+        world.options.ZonesAllowed.value.append("Sky Sanctuary Zone")
 
-        if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
-            if "Death Egg Zone" not in world.zones_available:
-                world.zones_available.append("Death Egg Zone")
-            if "Death Egg Zone" not in world.options.ZonesAllowed.value:
-                world.options.ZonesAllowed.value.append("Death Egg Zone")
+    if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
+        if "Death Egg Zone" in world.options.ZonesAllowed.value:
+            world.options.ZonesAllowed.value.remove("Death Egg Zone")
+        world.options.ZonesAllowed.value.append("Death Egg Zone")
 
-    for zone in world.zones_available:
+    # Add Doomsday if it's relevant
+    if world.is_doomsday_goal() and not world.is_knuckles_exclusive() or world.is_doomsday_goal_knuckles():
+        world.options.ZonesAllowed.value.append("Doomsday Zone")
+
+    for zone in world.options.ZonesAllowed.value:
         if zone not in zones:
-            raise Exception(f"Invalid zone '{zone}' in ZonesAllowed option for player "
-                            f"'{world.multiworld.get_player_name(world.player)}'")
+            raise Exception(f"Invalid zone '{zone}' in ZonesAllowed option for player '{world.multiworld.get_player_name(world.player)}'")
 
-    for zone in world.zones_available:
-        # Create zone regions
         zone_region = create_region_and_connect(world, zone, f"{zone} Entrance", menu)
-        if special_stage_region is not None and zone not in no_giantring_zones:
-            zone_region.connect(special_stage_region, f"{zone} -> Special Stages")
-
-        # Create act regions
         if zone not in single_act_zones:
             act_1 = create_region_and_connect(world, f"{zone}: Act 1", f"{zone}: Act 1 Entrance", zone_region)
             create_region_and_connect(world, f"{zone}: Act 2", f"{zone}: Act 2 Entrance", act_1)
 
-    # Add Sky Sanctuary for Knuckles if relevant
-    if knuckles_sanctuary and "Sky Sanctuary Zone" not in world.zones_available:
-        create_region_and_connect(world, "Sky Sanctuary Zone", "Sky Sanctuary Zone Entrance", menu)
-        world.zones_available.append("Sky Sanctuary Zone")
-        if "Sky Sanctuary Zone" not in world.options.ZonesAllowed.value:
-            world.options.ZonesAllowed.value.append("Sky Sanctuary Zone")
-
-    # Add Doomsday if it's relevant
-    if world.is_doomsday_goal() and not world.is_knuckles_exclusive() or world.is_doomsday_goal_knuckles():
-        create_region_and_connect(world, "Doomsday Zone", "Doomsday Zone Entrance", menu)
-        if "Doomsday Zone" not in world.options.ZonesAllowed.value:
-            world.options.ZonesAllowed.value.append("Doomsday Zone")
-
     # Determine starting zone with filters for goal related ones
-    for zone in world.zones_available:
-        if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
-            continue
-        if knuckles_sanctuary and zone == "Sky Sanctuary Zone":
-            continue
-
-        world.starting_zone = zone
-        break
-
     if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
         world.multiworld.push_precollected(create_item(world, "Progressive Zone Unlock"))
     else:
+        starting_zone_pool = []
+        for zone in world.options.ZonesAllowed.value:
+            if zone == "Doomsday Zone":
+                continue
+            if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
+                continue
+            if knuckles_sanctuary and zone == "Sky Sanctuary Zone":
+                continue
+
+            starting_zone_pool.append(zone)
+
+        world.starting_zone = starting_zone_pool[world.random.randint(0, len(starting_zone_pool)-1)]
         world.multiworld.push_precollected(create_item(world, f"Zone Unlock: {world.starting_zone}"))
 
 
@@ -186,8 +158,7 @@ def create_region(world: "Sonic3AIRWorld", name: str) -> Region:
                 if world.is_doomsday_goal_knuckles() or name != "Doomsday Zone":
                     act_event_name = f"Knuckles Act Complete ({name})"
                     event2 = Sonic3AIRLocation(world.player, act_event_name, None, reg)
-                    event2.place_locked_item(
-                        Sonic3AIRItem(act_event_name, ItemClassification.progression, None, world.player))
+                    event2.place_locked_item(Sonic3AIRItem(act_event_name, ItemClassification.progression, None, world.player))
                     event2.show_in_spoiler = False
                     add_rule(event2, lambda state: state.has("Knuckles", world.player))
                     reg.locations.append(event2)

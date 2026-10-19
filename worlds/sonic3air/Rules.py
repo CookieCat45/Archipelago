@@ -23,10 +23,7 @@ def init_rules(world: "Sonic3AIRWorld"):
 
     i = 1
     prev_zone = ""
-    for zone in zones:
-        if zone not in world.zones_available:
-            continue
-
+    for zone in world.options.ZonesAllowed.value:
         entrance = world.multiworld.get_entrance(f"{zone} Entrance", world.player)
         if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
             add_rule(entrance, lambda state, c=i: state.has("Progressive Zone Unlock", world.player, c))
@@ -42,7 +39,8 @@ def init_rules(world: "Sonic3AIRWorld"):
                     if not world.is_knuckles_exclusive():
                         add_rule(entrance, lambda state, n=item_name: state.has(n, world.player))
                     if world.has_knuckles_goal():
-                        add_rule(entrance, lambda state, n=item_name: state.has(f"Knuckles {n}", world.player))
+                        if world.options.KnucklesGoal != KnucklesGoal.option_allzones_sanctuary or prev_zone != "Sky Sanctuary Zone":
+                            add_rule(entrance, lambda state, n=item_name: state.has(f"Knuckles {n}", world.player))
 
                 prev_zone = zone
 
@@ -51,7 +49,7 @@ def init_rules(world: "Sonic3AIRWorld"):
             if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
                 add_rule(entrance, lambda state:
                     all_zones_complete(state, world, True, True) or all_zones_complete(state, world, True, True, True, True))
-            else:
+            elif zone != "Doomsday Zone":
                 add_rule(entrance, lambda state, z=zone: state.has(f"Zone Unlock: {z}", world.player))
                 if zone == "Sky Sanctuary Zone":
                     if world.has_knuckles_goal() and world.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary:
@@ -59,15 +57,6 @@ def init_rules(world: "Sonic3AIRWorld"):
                         for loc in entrance.connected_region.locations:
                             if loc.address is not None:
                                 add_rule(loc, lambda state: state.has_any(["Sonic", "Tails"], world.player))
-
-        if zone not in single_act_zones:
-            if not world.is_knuckles_exclusive():
-                act_2 = world.multiworld.get_location(f"Act Complete ({zone}: Act 2)", world.player)
-                add_rule(act_2, lambda state, z=zone: state.has(f"Act Complete ({z}: Act 1)", world.player))
-
-            if world.has_knuckles_goal():
-                act_2 = world.multiworld.get_location(f"Knuckles Act Complete ({zone}: Act 2)", world.player)
-                add_rule(act_2, lambda state, z=zone: state.has(f"Knuckles Act Complete ({z}: Act 1)", world.player))
 
     for s in range(world.options.SpecialStageUnlockItemCount):
         entrance = world.multiworld.get_entrance(f"-> Special Stage {s + 1}", world.player)
@@ -96,7 +85,7 @@ def init_rules(world: "Sonic3AIRWorld"):
         old_rule = world.multiworld.completion_condition[world.player]
         if world.options.KnucklesGoal == KnucklesGoal.option_allzones:
             world.multiworld.completion_condition[world.player] = \
-                lambda state: old_rule(state) and all_zones_complete(state, world, True, False, True, True)
+                lambda state: old_rule(state) and all_zones_complete(state, world, True, False, True, False)
         elif world.is_doomsday_goal_knuckles():
             world.multiworld.completion_condition[world.player] = \
                 lambda state: old_rule(state) and state.has("Knuckles Act Complete (Doomsday Zone)", world.player)
@@ -119,6 +108,17 @@ def init_rules(world: "Sonic3AIRWorld"):
 
     set_specific_rules(world)
 
+    for zone in world.options.ZonesAllowed.value:
+        if zone not in single_act_zones:
+            entrance = world.multiworld.get_entrance(f"{zone}: Act 2 Entrance", world.player)
+            loc = world.multiworld.get_location(f"{zone}: Act 1 - Complete", world.player)  # also copy the rules from the location
+            has_rule = False
+            if not world.is_knuckles_exclusive():
+                add_rule(entrance, lambda state, z=zone: loc.access_rule(state) and state.has(f"Act Complete ({z}: Act 1)", world.player))
+                has_rule = True
+            if world.has_knuckles_goal():
+                add_rule(entrance, lambda state, z=zone: loc.access_rule(state) and state.has(f"Knuckles Act Complete ({z}: Act 1)", world.player), "or" if has_rule else "and")
+
 
 def all_zones_complete(state: CollectionState, world: "Sonic3AIRWorld",
                        exclude_doomsday=False, exclude_deathegg=False,
@@ -127,7 +127,7 @@ def all_zones_complete(state: CollectionState, world: "Sonic3AIRWorld",
     if not knuckles:
         knuckles_str = ""
 
-    for zone in world.zones_available:
+    for zone in world.options.ZonesAllowed.value:
         if exclude_deathegg and zone == "Death Egg Zone":
             continue
 
