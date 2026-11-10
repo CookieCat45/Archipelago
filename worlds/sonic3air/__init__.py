@@ -1,6 +1,7 @@
-from typing import NamedTuple, Union, Mapping, Any
+from typing import NamedTuple, Union, Mapping, Any, Optional
 from BaseClasses import Item, Tutorial, ItemClassification, MultiWorld
-from .Options import Sonic3AIROptions, KnucklesStoryMode, KnucklesGoal, ZoneUnlockMode
+from Options import Option
+from .Options import Sonic3AIROptions, KnucklesStoryMode, KnucklesGoal, ZoneUnlockMode, Goal, adjust_options
 from .Regions import init_regions
 from .Locations import get_location_names
 from .Items import fill_itempool, create_item, item_table, get_random_junk
@@ -15,38 +16,28 @@ class Sonic3AIRWorld(World):
     location_name_to_id = get_location_names()
     options_dataclass = Sonic3AIROptions
     options: Sonic3AIROptions
+    ut_can_gen_without_yaml = True
 
     def __init__(self, multiworld: "MultiWorld", player: int):
         super().__init__(multiworld, player)
         self.starting_zone = ""
-        self.starting_character = "Sonic"
         self.location_char_whitelists = {}
         self.location_required_items = {}
+        self.ut_regen = False
 
     def generate_early(self) -> None:
-        if self.is_knuckles_exclusive():
-            self.starting_character = "Knuckles"
-        elif self.options.StartingCharacter == self.options.StartingCharacter.option_sonic:
-            self.starting_character = "Sonic"
-        elif self.options.StartingCharacter == self.options.StartingCharacter.option_tails:
-            self.starting_character = "Tails"
-        elif self.options.StartingCharacter == self.options.StartingCharacter.option_knuckles:
-            self.starting_character = "Knuckles"
+        re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
+        if re_gen_passthrough and self.game in re_gen_passthrough:
+            self.ut_regen = True
+            slot_data: dict[str, Any] = re_gen_passthrough[self.game]
+            self.starting_zone = slot_data["starting_zone"]
+            for key, value in slot_data.items():
+                opt: Optional[Option] = getattr(self.options, key, None)
+                if opt is not None:
+                    setattr(self.options, key, opt.from_any(value))
 
-        if self.options.KnucklesStoryMode == KnucklesStoryMode.option_removed and self.starting_character == "Knuckles":
-            self.starting_character = "Sonic"
-
-        self.multiworld.push_precollected(self.create_item(self.starting_character))
-
-        if self.is_knuckles_exclusive() and self.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary:
-            if self.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
-                # This makes no sense, so change it
-                self.options.ZoneUnlockMode.value = ZoneUnlockMode.option_shuffled
-
-        if "Doomsday Zone" in self.options.ZonesAllowed.value:
-            self.options.ZonesAllowed.value.remove("Doomsday Zone")
-        if "Doomsday Zone" in self.options.RandomZoneList.value:
-            self.options.RandomZoneList.value.remove("Doomsday Zone")
+        adjust_options(self)
+        self.multiworld.push_precollected(self.create_item(self.get_starting_char()))
 
     def create_regions(self):
         init_regions(self)
@@ -73,14 +64,36 @@ class Sonic3AIRWorld(World):
             "KnucklesStoryMode": self.options.KnucklesStoryMode.value,
             "KnucklesGoal": self.options.KnucklesGoal.value,
             "ShuffleGiantRings": self.options.ShuffleGiantRings.value,
+            "ChaosEmeraldFragments": self.options.ChaosEmeraldFragments.value,
+            "DisableSuperEmeralds": self.options.DisableSuperEmeralds.value,
             "GiantRingRewardCount": self.options.GiantRingRewardCount.value,
             "DeathLink": self.options.death_link.value,
-            "SpecialSeed": self.random.randint(1, 500000000),
+            "SpecialSeed": self.random.randint(1, 900000000),
             "LocationRequiredItems": self.location_required_items,
-            "LocationCharWhitelists": self.location_char_whitelists
+            "LocationCharWhitelists": self.location_char_whitelists,
+            "StartingCharacter": self.options.StartingCharacter.value,
+            "ExtraChaosEmeraldFragments": self.options.ExtraChaosEmeraldFragments.value,
+            "SpecialStageSphereChecks": self.options.SpecialStageSphereChecks.value,
+            "SpecialStageRingChecks": self.options.SpecialStageRingChecks.value,
+            "SpecialStageSphereChecksLimit": self.options.SpecialStageSphereChecksLimit.value,
+            "SpecialStageRingChecksLimit": self.options.SpecialStageRingChecksLimit.value,
+            "starting_zone": self.starting_zone,
         }
 
         return slot_data
+
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str, Any]) -> dict[str, Any]:
+        return slot_data
+
+    def get_starting_char(self) -> str:
+        starting_chars = {0: "Sonic", 1: "Tails", 2: "Knuckles"}
+        return starting_chars[self.options.StartingCharacter.value]
+
+    def get_emerald_count(self) -> int:
+        if self.options.DisableSuperEmeralds:
+            return 7
+        return 14
 
     def is_doomsday_goal(self) -> bool:
         return self.options.Goal.value > 0

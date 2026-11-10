@@ -74,9 +74,9 @@ def init_rules(world: "Sonic3AIRWorld"):
         elif world.is_doomsday_goal():
             world.multiworld.completion_condition[world.player] = lambda state: state.has("Act Complete (Doomsday Zone)", world.player)
             if world.options.Goal == Goal.option_doomsday or world.options.Goal == Goal.option_allzones_doomsday:
-                add_rule(doom_entrance, lambda state: state.has("Chaos Emerald", world.player, 7))
+                add_rule(doom_entrance, lambda state: get_total_emeralds(state, world) >= 7)
             elif world.options.Goal == Goal.option_doomsday_hyper or world.options.Goal == Goal.option_allzones_doomsday_hyper:
-                add_rule(doom_entrance, lambda state: state.has("Chaos Emerald", world.player, 14))
+                add_rule(doom_entrance, lambda state: get_total_emeralds(state, world) >= 14)
 
             if world.options.Goal == Goal.option_allzones_doomsday or world.options.Goal == Goal.option_allzones_doomsday_hyper:
                 add_rule(doom_entrance, lambda state: all_zones_complete(state, world, True))
@@ -92,10 +92,10 @@ def init_rules(world: "Sonic3AIRWorld"):
 
             if (world.options.KnucklesGoal == KnucklesGoal.option_doomsday
              or world.options.KnucklesGoal == KnucklesGoal.option_allzones_doomsday):
-                add_rule(doom_entrance, lambda state: state.has("Chaos Emerald", world.player, 7))
+                add_rule(doom_entrance, lambda state: get_total_emeralds(state, world) >= 7)
             elif (world.options.KnucklesGoal == KnucklesGoal.option_doomsday_hyper
              or world.options.KnucklesGoal == KnucklesGoal.option_allzones_doomsday_hyper):
-                add_rule(doom_entrance, lambda state: state.has("Chaos Emerald", world.player, 14))
+                add_rule(doom_entrance, lambda state: get_total_emeralds(state, world) >= 14)
 
             if (world.options.KnucklesGoal == KnucklesGoal.option_allzones_doomsday
              or world.options.KnucklesGoal == KnucklesGoal.option_allzones_doomsday_hyper):
@@ -145,6 +145,18 @@ def all_zones_complete(state: CollectionState, world: "Sonic3AIRWorld",
                 return False
 
     return True
+
+
+def get_total_emeralds(state: CollectionState, world: "Sonic3AIRWorld") -> int:
+    emeralds = state.count("Chaos Emerald", world.player)
+    fragment_req = world.options.ChaosEmeraldFragments.value
+    if fragment_req > 1:
+        emeralds += state.count("Chaos Emerald Fragment", world.player) // fragment_req
+
+    if emeralds > 7 and world.options.DisableSuperEmeralds:
+        emeralds = 7
+
+    return emeralds
 
 
 def set_specific_rules(world: "Sonic3AIRWorld"):

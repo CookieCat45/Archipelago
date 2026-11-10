@@ -44,7 +44,8 @@ items_junk = {
 }
 
 items_misc = {
-    "Chaos Emerald": ItemData(2020300026, ItemClassification.progression),
+    "Chaos Emerald": ItemData(2020300026, ItemClassification.progression_skip_balancing),
+    "Chaos Emerald Fragment": ItemData(2020300029, ItemClassification.progression_skip_balancing),
 }
 
 item_table = {
@@ -60,17 +61,21 @@ def fill_itempool(world: "Sonic3AIRWorld"):
             raise Exception(f"Invalid item '{key}' in JunkItemWeights for player {world.multiworld.get_player_name(world.player)}")
 
     item_count = 0
+    starting_char = world.get_starting_char()
     for item, data in item_table.items():
-        if data.classification == ItemClassification.filler:
+        if data.classification == ItemClassification.filler or data.classification == ItemClassification.trap:
             continue
 
-        if item == world.starting_character:
+        if item == starting_char:
             continue
 
         if world.options.KnucklesStoryMode == KnucklesStoryMode.option_exclusive and (item == "Sonic" or item == "Tails"):
             continue
 
         if item == "Sonic" and world.is_knuckles_exclusive():
+            continue
+
+        if item == "Knuckles" and world.options.KnucklesStoryMode == KnucklesStoryMode.option_removed:
             continue
 
         if item.startswith("Zone Unlock: "):
@@ -80,13 +85,6 @@ def fill_itempool(world: "Sonic3AIRWorld"):
             zone: str = item[len("Zone Unlock: ")-1:].strip()
             if zone == world.starting_zone:
                 continue
-
-            if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
-                continue
-
-            if world.has_knuckles_goal() and world.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary:
-                if zone == "Sky Sanctuary Zone":
-                    continue
 
             if zone not in world.options.ZonesAllowed.value:
                 continue
@@ -109,7 +107,13 @@ def get_item_count(world: "Sonic3AIRWorld", item: str) -> int:
     elif item == "Progressive Special Stage Unlock":
         return world.options.SpecialStageUnlockItemCount.value
     elif item == "Chaos Emerald":
-        return 14
+        if world.options.ChaosEmeraldFragments > 1:
+            return 0
+        return world.get_emerald_count()
+    elif item == "Chaos Emerald Fragment":
+        if world.options.ChaosEmeraldFragments > 1:
+            return (world.get_emerald_count() * world.options.ChaosEmeraldFragments.value) + world.options.ExtraChaosEmeraldFragments.value
+        return 0
 
     return 1
 

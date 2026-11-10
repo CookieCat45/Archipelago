@@ -5,6 +5,34 @@ from worlds.AutoWorld import PerGameCommonOptions
 from Options import Range, Toggle, DeathLink, Choice, OptionList, DefaultOnToggle, OptionGroup, StartInventoryPool, \
 OptionDict
 
+if TYPE_CHECKING:
+    from . import Sonic3AIRWorld
+
+def adjust_options(world: "Sonic3AIRWorld"):
+    if world.ut_regen:
+        return
+
+    if world.is_knuckles_exclusive():
+        world.options.StartingCharacter.value = StartingCharacter.option_knuckles
+    elif world.options.KnucklesStoryMode == KnucklesStoryMode.option_removed and world.options.StartingCharacter == StartingCharacter.option_knuckles:
+        world.options.StartingCharacter.value = StartingCharacter.option_sonic
+
+    if world.is_knuckles_exclusive() and world.options.KnucklesGoal == KnucklesGoal.option_allzones_sanctuary:
+        if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
+            # This makes no sense, so change it
+            world.options.ZoneUnlockMode.value = ZoneUnlockMode.option_shuffled
+
+    if world.options.DisableSuperEmeralds:
+        if world.options.Goal == Goal.option_doomsday_hyper:
+            world.options.Goal.value = Goal.option_doomsday
+        if world.options.KnucklesGoal == KnucklesGoal.option_doomsday_hyper:
+            world.options.KnucklesGoal = KnucklesGoal.option_doomsday
+
+    if "Doomsday Zone" in world.options.ZonesAllowed.value:
+        world.options.ZonesAllowed.value.remove("Doomsday Zone")
+    if "Doomsday Zone" in world.options.RandomZoneList.value:
+        world.options.RandomZoneList.value.remove("Doomsday Zone")
+
 
 class StartingCharacter(Choice):
     """The character that you will start the game with."""
@@ -18,8 +46,7 @@ class ZoneUnlockMode(Choice):
     linear: Zones are unlocked via progressive items, with the unlock order determined by the ZonesAllowed option list.
         You start with the first zone in the list. To progress, the zones must be completed in order.
     shuffled: Individual zone unlocks are shuffled into the item pool. You start with a random zone.
-    shuffled_deathegg: Same as shuffled, but locks Death Egg Zone until all other zones are completed,
-        and removes Death Egg Zone from the item pool.
+    shuffled_deathegg: Same as shuffled, but locks Death Egg Zone until all other zones are completed.
     """
     option_linear = 0
     option_shuffled = 1
@@ -64,8 +91,8 @@ class Goal(Choice):
     allzones: Complete all available zones as Sonic and/or Tails
     doomsday: Collect all Chaos Emeralds and finish Doomsday Zone
     doomsday_hyper: Collect all Chaos + Super Emeralds and finish Doomsday Zone
-    allzones_doomsday: Complete all zones, collect all Chaos Emeralds and finish Doomsday Zone
-    allzones_doomsday_hyper: Complete all zones, collect all Chaos + Super Emeralds and finish Doomsday Zone
+    allzones_doomsday: Complete all zones, collect 7 Emeralds and finish Doomsday Zone
+    allzones_doomsday_hyper: Complete all zones, collect 14 Emeralds and finish Doomsday Zone
     """
     option_allzones = 0
     option_doomsday = 1
@@ -93,8 +120,8 @@ class KnucklesGoal(Choice):
     allzones: Complete all available zones as Knuckles
     doomsday: Collect all Chaos Emeralds and finish Doomsday Zone
     doomsday_hyper: Collect all Chaos + Super Emeralds and finish Doomsday Zone
-    allzones_doomsday: Complete all zones, collect all Chaos Emeralds and finish Doomsday Zone
-    allzones_doomsday_hyper: Complete all zones, collect all Chaos + Super Emeralds and finish Doomsday Zone
+    allzones_doomsday: Complete all zones, collect 7 Emeralds and finish Doomsday Zone
+    allzones_doomsday_hyper: Complete all zones, collect 14 Emeralds and finish Doomsday Zone
     allzones_sanctuary: Same as 'allzones', but Sky Sanctuary will always be the last completable zone for Knuckles,
         and will be the Mecha Sonic boss for him"""
     option_allzones = 0
@@ -107,6 +134,27 @@ class KnucklesGoal(Choice):
 
 class ShuffleGiantRings(DefaultOnToggle):
     """Turns the Giant Rings found in most levels into location checks."""
+
+
+class ChaosEmeraldFragments(Range):
+    """If this option's value is greater than 1, all Chaos Emeralds in the pool will be removed
+    and split into Chaos Emerald Fragments. This option's value determines the number
+    of fragments required to obtain one Emerald."""
+    range_start = 0
+    range_end = 5
+    default = 0
+
+
+class ExtraChaosEmeraldFragments(Range):
+    """Extra emerald fragments to put in the item pool, if fragments are enabled."""
+    range_start = 0
+    range_end = 25
+    default = 8
+
+
+class DisableSuperEmeralds(Toggle):
+    """If enabled, only 7 total Chaos Emeralds will be added to the item pool, removing the 7 additional Super Emeralds.
+    This will adjust your goal options if necessary."""
 
 
 class SpecialStageUnlockItemCount(Range):
@@ -190,6 +238,9 @@ class Sonic3AIROptions(PerGameCommonOptions):
     KnucklesStoryMode: KnucklesStoryMode
     KnucklesGoal: KnucklesGoal
     ShuffleGiantRings: ShuffleGiantRings
+    ChaosEmeraldFragments: ChaosEmeraldFragments
+    ExtraChaosEmeraldFragments: ExtraChaosEmeraldFragments
+    DisableSuperEmeralds: DisableSuperEmeralds
     SpecialStageUnlockItemCount: SpecialStageUnlockItemCount
     SpecialStageSphereChecks: SpecialStageSphereChecks
     SpecialStageRingChecks: SpecialStageRingChecks

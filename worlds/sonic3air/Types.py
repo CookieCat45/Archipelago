@@ -22,4 +22,3 @@ class ItemData(NamedTuple):
 class LogicFlags(IntFlag):
     NONE = 0
     WALL_SMASH = auto()
-    WALL_SMASH_STRIP = auto()

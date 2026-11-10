@@ -67,30 +67,31 @@ def init_regions(world: "Sonic3AIRWorld"):
                     special_stage.locations.append(location)
                     ring_loc_id += 2
 
-    random_count = world.options.RandomZoneCount.value
-    random_list = world.options.RandomZoneList.value
-    while random_count > 0 and len(random_list) > 0 and len(world.options.ZonesAllowed.value) < 13:
-        random_zone = random_list[world.random.randint(0, len(random_list) - 1)]
-        random_list.remove(random_zone)
-        if random_zone not in world.options.ZonesAllowed.value:
-            if len(world.options.ZonesAllowed.value) == 0:
-                world.options.ZonesAllowed.value.append(random_zone)
-            else:
-                world.options.ZonesAllowed.value.insert(world.random.randint(0, len(world.options.ZonesAllowed.value)-1), random_zone)
-            random_count -= 1
+    if not world.ut_regen:
+        random_count = world.options.RandomZoneCount.value
+        random_list = world.options.RandomZoneList.value
+        while random_count > 0 and len(random_list) > 0 and len(world.options.ZonesAllowed.value) < 13:
+            random_zone = random_list[world.random.randint(0, len(random_list) - 1)]
+            random_list.remove(random_zone)
+            if random_zone not in world.options.ZonesAllowed.value:
+                if len(world.options.ZonesAllowed.value) == 0:
+                    world.options.ZonesAllowed.value.append(random_zone)
+                else:
+                    world.options.ZonesAllowed.value.insert(world.random.randint(0, len(world.options.ZonesAllowed.value)-1), random_zone)
+                random_count -= 1
 
-    # Add Sky Sanctuary for Knuckles if relevant
-    if knuckles_sanctuary and "Sky Sanctuary Zone" not in world.options.ZonesAllowed.value:
-        world.options.ZonesAllowed.value.append("Sky Sanctuary Zone")
+        # Add Sky Sanctuary for Knuckles if relevant
+        if knuckles_sanctuary and "Sky Sanctuary Zone" not in world.options.ZonesAllowed.value:
+            world.options.ZonesAllowed.value.append("Sky Sanctuary Zone")
 
-    if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
-        if "Death Egg Zone" in world.options.ZonesAllowed.value:
-            world.options.ZonesAllowed.value.remove("Death Egg Zone")
-        world.options.ZonesAllowed.value.append("Death Egg Zone")
+        if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg:
+            if "Death Egg Zone" in world.options.ZonesAllowed.value:
+                world.options.ZonesAllowed.value.remove("Death Egg Zone")
+            world.options.ZonesAllowed.value.append("Death Egg Zone")
 
-    # Add Doomsday if it's relevant
-    if world.is_doomsday_goal() and not world.is_knuckles_exclusive() or world.is_doomsday_goal_knuckles():
-        world.options.ZonesAllowed.value.append("Doomsday Zone")
+        # Add Doomsday if it's relevant
+        if world.is_doomsday_goal() and not world.is_knuckles_exclusive() or world.is_doomsday_goal_knuckles():
+            world.options.ZonesAllowed.value.append("Doomsday Zone")
 
     for zone in world.options.ZonesAllowed.value:
         if zone not in zones:
@@ -105,18 +106,19 @@ def init_regions(world: "Sonic3AIRWorld"):
     if world.options.ZoneUnlockMode == ZoneUnlockMode.option_linear:
         world.multiworld.push_precollected(create_item(world, "Progressive Zone Unlock"))
     else:
-        starting_zone_pool = []
-        for zone in world.options.ZonesAllowed.value:
-            if zone == "Doomsday Zone":
-                continue
-            if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
-                continue
-            if knuckles_sanctuary and zone == "Sky Sanctuary Zone":
-                continue
+        if not world.ut_regen:
+            starting_zone_pool = []
+            for zone in world.options.ZonesAllowed.value:
+                if zone == "Doomsday Zone":
+                    continue
+                if world.options.ZoneUnlockMode == ZoneUnlockMode.option_shuffled_deathegg and zone == "Death Egg Zone":
+                    continue
+                if knuckles_sanctuary and zone == "Sky Sanctuary Zone":
+                    continue
 
-            starting_zone_pool.append(zone)
+                starting_zone_pool.append(zone)
 
-        world.starting_zone = starting_zone_pool[world.random.randint(0, len(starting_zone_pool)-1)]
+            world.starting_zone = starting_zone_pool[world.random.randint(0, len(starting_zone_pool)-1)]
         world.multiworld.push_precollected(create_item(world, f"Zone Unlock: {world.starting_zone}"))
 
 
