@@ -81,7 +81,6 @@ annoying_dws = [
 
 # includes the above as well
 annoying_bonuses = [
-    "So You're Back From Outer Space",
     "Encore! Encore!",
     "Snatcher's Hit List",
     "Vault Codes in the Wind",

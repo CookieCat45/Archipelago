@@ -24,6 +24,8 @@ class HitType(IntEnum):
     umbrella = 1
     umbrella_or_brewing = 2
     dweller_bell = 3
+    punchable = 4
+    stompable_enemy = 5
 
 
 class HatDLC(IntFlag):
@@ -60,6 +62,7 @@ class LocData(NamedTuple):
     hookshot: bool = False
     dlc_flags: HatDLC = HatDLC.none
     paintings: int = 0  # Paintings required for Subcon painting shuffle
+    grab: bool = False
     misc_required: List[str] = []
 
     # For UmbrellaLogic setting only.

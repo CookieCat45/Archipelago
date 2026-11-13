@@ -166,6 +166,13 @@ class CTRLogic(Choice):
     default = 0
 
 
+class DeadBirdWinner(Choice):
+    """Sets the winning director for the Dead Bird Studio chapter."""
+    option_conductor = 1
+    option_dj_grooves = 2
+    default = 1
+
+
 class RandomizeHatOrder(Choice):
     """Randomize the order that hats are stitched in.
     Time Stop Last will force Time Stop to be the last hat in the sequence."""
@@ -212,6 +219,17 @@ class CompassBadgeMode(Choice):
 class UmbrellaLogic(Toggle):
     """Makes Hat Kid's default punch attack do absolutely nothing, making the Umbrella much more relevant and useful"""
     display_name = "Umbrella Logic"
+
+
+class LockHomingAttack(Toggle):
+    """Locks Hat Kid's homing attack ability behind an item.
+    This also includes stomp damage dealt normally without the homing attack (both are tied to one item)."""
+    display_name = "Lock Homing Attack"
+
+
+class LockObjectGrab(Toggle):
+    """Locks Hat Kid's ability to grab objects, such as cherry bombs, behind an item."""
+    display_name = "Lock Object Grab"
 
 
 class ShuffleStorybookPages(DefaultOnToggle):
@@ -662,6 +680,8 @@ class AHITOptions(PerGameCommonOptions):
     TimePieceBalancePercent:  TimePieceBalancePercent
     RandomizeHatOrder:        RandomizeHatOrder
     UmbrellaLogic:            UmbrellaLogic
+    LockHomingAttack:         LockHomingAttack
+    LockObjectGrab:           LockObjectGrab
     StartWithCompassBadge:    StartWithCompassBadge
     CompassBadgeMode:         CompassBadgeMode
     ShuffleStorybookPages:    ShuffleStorybookPages
@@ -723,6 +743,7 @@ class AHITOptions(PerGameCommonOptions):
     BabyTrapWeight:           BabyTrapWeight
     LaserTrapWeight:          LaserTrapWeight
     ParadeTrapWeight:         ParadeTrapWeight
+    DeadBirdWinner:           DeadBirdWinner
 
     death_link:               DeathLink
     death_link_amnesty:       DeathLinkAmnesty
@@ -733,15 +754,15 @@ ahit_option_groups: Dict[str, List[Any]] = {
     "General Options": [EndGoal, ShuffleStorybookPages, ShuffleDirectorTokens,
                         ShuffleAlpineZiplines, ShuffleSubconPaintings,
                         ShuffleActContracts, MinPonCost, MaxPonCost, BadgeSellerMinItems, BadgeSellerMaxItems,
-                        LogicDifficulty, NoPaintingSkips, CTRLogic],
+                        LogicDifficulty, NoPaintingSkips, CTRLogic, DeadBirdWinner],
 
     "Act Options": [ActRandomizer, StartingChapter, LowestChapterCost, HighestChapterCost,
                     ChapterCostIncrement, ChapterCostMinDifference, FinalChapterMinCost, FinalChapterMaxCost,
                     FinaleShuffle, ActPlando, ActBlacklist],
 
     "Item Options": [StartWithCompassBadge, CompassBadgeMode, RandomizeHatOrder, YarnAvailable, YarnCostMin,
-                     YarnCostMax, MinExtraYarn, HatItems, UmbrellaLogic, MaxExtraTimePieces, YarnBalancePercent,
-                     TimePieceBalancePercent],
+                     YarnCostMax, MinExtraYarn, HatItems, UmbrellaLogic, LockHomingAttack, LockObjectGrab,
+                     MaxExtraTimePieces, YarnBalancePercent, TimePieceBalancePercent],
 
     "Arctic Cruise Options": [EnableDLC1, Tasksanity, TasksanityTaskStep, TasksanityCheckCount,
                               ShipShapeCustomTaskGoal, ExcludeTour],
@@ -763,8 +784,11 @@ slot_data_options: List[str] = [
     "ShuffleAlpineZiplines",
     "LogicDifficulty",
     "CTRLogic",
+    "DeadBirdWinner",
     "RandomizeHatOrder",
     "UmbrellaLogic",
+    "LockHomingAttack",
+    "LockObjectGrab",
     "StartWithCompassBadge",
     "CompassBadgeMode",
     "ShuffleStorybookPages",

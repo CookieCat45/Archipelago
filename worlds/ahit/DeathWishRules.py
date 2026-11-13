@@ -1,5 +1,6 @@
 from worlds.AutoWorld import CollectionState
-from .Rules import can_use_hat, can_use_hookshot, can_hit, zipline_logic, get_difficulty, has_paintings
+from .Rules import can_use_hat, can_use_hookshot, can_hit, zipline_logic, get_difficulty, has_paintings, \
+    can_grab_objects
 from .Types import HatType, Difficulty, HatInTimeLocation, HatInTimeItem, LocData, HitType
 from .DeathWishLocations import dw_prereqs, dw_candles
 from BaseClasses import Entrance, Location, ItemClassification
@@ -16,32 +17,44 @@ if TYPE_CHECKING:
 dw_requirements = {
     "Beat the Heat": LocData(hit_type=HitType.umbrella),
     "So You're Back From Outer Space": LocData(hookshot=True),
+    "Rift Collapse: Mafia of Cooks": LocData(hit_type=HitType.punchable),
     "Mafia's Jumps": LocData(required_hats=[HatType.ICE]),
     "Vault Codes in the Wind": LocData(required_hats=[HatType.SPRINT]),
+    "Encore! Encore!": LocData(hit_type=HitType.stompable_enemy),
+    "Snatcher's Hit List": LocData(hit_type=HitType.stompable_enemy),
 
     "Security Breach": LocData(hit_type=HitType.umbrella_or_brewing),
     "10 Seconds until Self-Destruct": LocData(hookshot=True),
-    "Community Rift: Rhythm Jump Studio": LocData(required_hats=[HatType.ICE]),
+    "Community Rift: Rhythm Jump Studio": LocData(required_hats=[HatType.ICE], hit_type=HitType.punchable),
+    "Rift Collapse: Dead Bird Studio": LocData(hit_type=HitType.punchable),
 
-    "Speedrun Well": LocData(hookshot=True, hit_type=HitType.umbrella_or_brewing),
-    "Boss Rush": LocData(hit_type=HitType.umbrella, hookshot=True),
-    "Community Rift: Twilight Travels": LocData(hookshot=True, required_hats=[HatType.DWELLER]),
+    "Rift Collapse: Sleepy Subcon": LocData(hit_type=HitType.punchable),
+    "Speedrun Well": LocData(hookshot=True, hit_type=HitType.umbrella_or_brewing, grab=True),
+    "Breaching the Contract": LocData(grab=True),
+    "Boss Rush": LocData(hit_type=HitType.stompable_enemy, hookshot=True, grab=True, misc_required=["Umbrella"]),
+    "Community Rift: Twilight Travels": LocData(hookshot=True, required_hats=[HatType.DWELLER],
+                                                hit_type=HitType.punchable),
 
     "Bird Sanctuary": LocData(hookshot=True),
     "Wound-Up Windmill": LocData(hookshot=True),
-    "The Illness has Speedrun": LocData(hookshot=True),
-    "Community Rift: The Mountain Rift": LocData(hookshot=True, required_hats=[HatType.DWELLER]),
+    "Rift Collapse: Alpine Skyline": LocData(hit_type=HitType.punchable),
+    "The Illness has Speedrun": LocData(hookshot=True, hit_type=HitType.stompable_enemy),
+    "Community Rift: The Mountain Rift": LocData(hookshot=True, required_hats=[HatType.DWELLER],
+                                                 hit_type=HitType.punchable),
     "Camera Tourist": LocData(misc_required=["Camera Badge"]),
 
     "The Mustache Gauntlet": LocData(hookshot=True, required_hats=[HatType.DWELLER]),
+    "No More Bad Guys": LocData(grab=True),
 
-    "Rift Collapse: Deep Sea": LocData(hookshot=True),
+    "Rift Collapse: Deep Sea": LocData(hookshot=True, hit_type=HitType.punchable),
+    "Seal the Deal": LocData(grab=True),
 }
 
 # Includes main objective requirements
 dw_bonus_requirements = {
     # Some One-Hit Hero requirements need badge pins as well because of Hookshot
-    "So You're Back From Outer Space": LocData(required_hats=[HatType.SPRINT]),
+    "So You're Back From Outer Space": LocData(required_hats=[HatType.SPRINT], hit_type=HitType.stompable_enemy),
+    "Vault Codes in the Wind": LocData(required_hats=[HatType.SPRINT], hit_type=HitType.stompable_enemy),
     "Encore! Encore!": LocData(misc_required=["One-Hit Hero Badge"]),
 
     "10 Seconds until Self-Destruct": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
@@ -49,9 +62,11 @@ dw_bonus_requirements = {
     "Boss Rush": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
     "Community Rift: Twilight Travels": LocData(required_hats=[HatType.BREWING]),
 
-    "Bird Sanctuary": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"], required_hats=[HatType.DWELLER]),
+    "Bird Sanctuary": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"], required_hats=[HatType.DWELLER],
+                              hit_type=HitType.stompable_enemy),
     "Wound-Up Windmill": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
     "The Illness has Speedrun": LocData(required_hats=[HatType.SPRINT]),
+    "Rift Collapse: Alpine Skyline": LocData(hit_type=HitType.stompable_enemy),
 
     "The Mustache Gauntlet": LocData(required_hats=[HatType.ICE]),
 
@@ -191,6 +206,9 @@ def add_dw_rules(world: "HatInTimeWorld", loc: Location):
     if data.hookshot:
         add_rule(loc, lambda state: can_use_hookshot(state, world))
 
+    if data.grab and world.options.LockObjectGrab:
+        add_rule(loc, lambda state: can_grab_objects(state, world))
+
     for hat in data.required_hats:
         add_rule(loc, lambda state, h=hat: can_use_hat(state, world, h))
 
@@ -203,15 +221,21 @@ def add_dw_rules(world: "HatInTimeWorld", loc: Location):
     if data.hit_type is not HitType.none and world.options.UmbrellaLogic:
         if data.hit_type == HitType.umbrella:
             add_rule(loc, lambda state: state.has("Umbrella", world.player))
-
         elif data.hit_type == HitType.umbrella_or_brewing:
             add_rule(loc, lambda state: state.has("Umbrella", world.player)
                      or can_use_hat(state, world, HatType.BREWING))
-
         elif data.hit_type == HitType.dweller_bell:
             add_rule(loc, lambda state: state.has("Umbrella", world.player)
                      or can_use_hat(state, world, HatType.BREWING)
                      or can_use_hat(state, world, HatType.DWELLER))
+        elif data.hit_type == HitType.punchable or data.hit_type == HitType.stompable_enemy:
+            if ((data.hit_type == HitType.stompable_enemy or world.options.UmbrellaLogic)
+                    and world.options.LockHomingAttack):
+                # any weapon required (rift balls can be punched with umbrella logic off)
+                add_rule(loc, lambda state: state.has("Umbrella", world.player)
+                         or state.has("Homing Attack", world.player)
+                         or can_use_hat(state, world, HatType.BREWING)
+                         or can_use_hat(state, world, HatType.ICE))
 
 
 def modify_dw_rules(world: "HatInTimeWorld", name: str):
@@ -236,9 +260,9 @@ def modify_dw_rules(world: "HatInTimeWorld", name: str):
             set_rule(main_objective, lambda state: True)
 
     elif name == "Speedrun Well":
-        # All stamps with nothing :)
+        # All stamps with only Grab
         if difficulty >= Difficulty.EXPERT:
-            set_rule(main_objective, lambda state: True)
+            set_rule(main_objective, lambda state: can_grab_objects(state, world))
 
     elif name == "Mafia's Jumps":
         if difficulty >= Difficulty.HARD:
@@ -255,6 +279,44 @@ def modify_dw_rules(world: "HatInTimeWorld", name: str):
         if difficulty >= Difficulty.MODERATE:
             set_rule(full_clear, lambda state: can_use_hookshot(state, world)
                      and state.has("One-Hit Hero Badge", world.player))
+
+    elif name == "Breaching the Contract":
+        # Make sure Umbrella is still considered necessary in some cases
+        if difficulty < Difficulty.HARD:
+            if not world.options.DWEnableBonus or "Breaching the Contract" in world.excluded_bonuses:
+                add_rule(main_objective, lambda state: state.has("Umbrella", world.player))
+
+    elif name == "Killing Two Birds":
+        if world.options.LockHomingAttack:
+            # This is pretty hard without Homing
+            if difficulty < Difficulty.EXPERT:
+                add_rule(main_objective, lambda state: state.has("Homing Attack", world.player))
+            else:
+                add_rule(main_objective, lambda state: state.has("Umbrella", world.player)
+                        or state.has("Homing Attack", world.player) or can_use_hat(state, world, HatType.BREWING))
+            add_rule(full_clear, lambda state: state.has("Homing Attack", world.player))
+
+    elif name == "No More Bad Guys":
+        if world.options.LockHomingAttack:
+            if difficulty >= Difficulty.EXPERT:
+                add_rule(main_objective, lambda state: state.has("Homing Attack", world.player)
+                         or can_use_hat(state, world, HatType.BREWING) or state.has("Umbrella", world.player))
+            else:
+                add_rule(main_objective, lambda state: state.has("Homing Attack", world.player))
+            add_rule(full_clear, lambda state: state.has("Homing Attack", world.player))
+
+    elif name == "Seal the Deal":
+        if world.options.LockHomingAttack:
+            if difficulty >= Difficulty.EXPERT:
+                add_rule(main_objective, lambda state: state.has("Umbrella", world.player)
+                     or state.has("Homing Attack", world.player) or can_use_hat(state, world, HatType.BREWING))
+            else:
+                # Expect both Umbrella + Homing on lower difficulties
+                add_rule(main_objective, lambda state: state.has("Umbrella", world.player)
+                         and state.has("Homing Attack", world.player))
+            add_rule(full_clear, lambda state: state.has("Homing Attack", world.player))
+        elif difficulty < Difficulty.EXPERT:
+            add_rule(main_objective, lambda state: state.has("Umbrella", world.player))
 
     if name in dw_candles:
         set_candle_dw_rules(name, world)
@@ -274,13 +336,14 @@ def set_candle_dw_rules(name: str, world: "HatInTimeWorld"):
         if get_difficulty(world) < Difficulty.EXPERT or world.options.NoPaintingSkips:
             set_rule(world.multiworld.get_location("Toilet of Doom (Zero Jumps)", world.player),
                      lambda state: can_use_hookshot(state, world) and can_hit(state, world)
-                     and has_paintings(state, world, 1, False))
+                     and has_paintings(state, world, 1, False) and can_grab_objects(state, world))
         else:
             set_rule(world.multiworld.get_location("Toilet of Doom (Zero Jumps)", world.player),
-                     lambda state: can_use_hookshot(state, world) and can_hit(state, world))
+                     lambda state: can_use_hookshot(state, world) and can_hit(state, world)
+                                   and can_grab_objects(state, world))
 
         set_rule(world.multiworld.get_location("Contractual Obligations (Zero Jumps)", world.player),
-                 lambda state: has_paintings(state, world, 1, False))
+                 lambda state: has_paintings(state, world, 1, False) and can_grab_objects(state, world))
 
     elif name == "Snatcher's Hit List":
         add_rule(main_objective, lambda state: state.has("Mafia Goon", world.player))
@@ -391,9 +454,12 @@ def set_enemy_rules(world: "HatInTimeWorld"):
             elif enemy == "Snatcher" or enemy == "Mustache Girl":
                 if area == "Boss Rush":
                     # need to be able to kill toilet and snatcher
-                    add_rule(event, lambda state: can_hit(state, world) and can_use_hookshot(state, world))
+                    add_rule(event, lambda state: can_hit(state, world) and can_use_hookshot(state, world)
+                             and can_grab_objects(state, world))
                     if enemy == "Mustache Girl":
-                        add_rule(event, lambda state: can_hit(state, world, True) and can_use_hookshot(state, world))
+                        add_rule(event, lambda state: can_hit(state, world, True)
+                                 and can_use_hookshot(state, world)
+                                 and can_grab_objects(state, world))
 
                 elif area == "The Finale" and enemy == "Mustache Girl":
                     add_rule(event, lambda state: can_use_hookshot(state, world)

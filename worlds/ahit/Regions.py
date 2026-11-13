@@ -725,6 +725,20 @@ def is_valid_first_act(world: "HatInTimeWorld", act: Region) -> bool:
         elif act.name == "Heating Up Mafia Town":  # Straight up impossible
             return False
 
+    if world.options.LockHomingAttack:
+        # These levels require some sort of weapon to proceed
+        if (act.name == "Welcome to Mafia Town" or act.name == "Down with the Mafia!"
+         or act.name == "Barrel Battle" or act.name == "Dead Bird Studio Basement"):
+            return False
+        elif world.options.UmbrellaLogic and act.name in purple_time_rifts:
+            return False
+
+    if world.options.LockObjectGrab:
+        if (act.name == "Your Contract has Expired" or act.name == "Down with the Mafia!"
+            or act.name == "Contractual Obligations" or act.name == "Queen Vanessa's Manor"
+            or act.name == "The Subcon Well" or act.name == "Rock the Boat"):
+                return False
+
     # Need to be able to hover
     if act.name == "Your Contract has Expired":
         if diff < Difficulty.EXPERT or world.options.ShuffleSubconPaintings and world.options.NoPaintingSkips:

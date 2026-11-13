@@ -31,6 +31,12 @@ def create_itempool(world: "HatInTimeWorld") -> List[Item]:
         if not world.options.HatItems and name in hat_type_to_item.values():
             continue
 
+        if not world.options.LockHomingAttack and name == "Homing Attack":
+            continue
+
+        if not world.options.LockObjectGrab and name == "Object Grab":
+            continue
+
         item_type: ItemClassification = item_table.get(name).classification
 
         if world.is_dw_only():
@@ -208,7 +214,7 @@ ahit_items = {
     "Fast Hatter Badge": ItemData(2000300025, ItemClassification.useful),
     "Hover Badge": ItemData(2000300026, ItemClassification.useful),
     "Hookshot Badge": ItemData(2000300027, ItemClassification.progression),
-    "Item Magnet Badge": ItemData(2000300028, ItemClassification.useful),
+    "Item Magnet Badge": ItemData(2000300028, ItemClassification.progression),
     "No Bonk Badge": ItemData(2000300029, ItemClassification.useful),
     "Compass Badge": ItemData(2000300030, ItemClassification.useful),
     "Scooter Badge": ItemData(2000300031, ItemClassification.useful),
@@ -252,6 +258,8 @@ ahit_items = {
     "Badge Pin": ItemData(2000300043, ItemClassification.useful),
     "Umbrella": ItemData(2000300033, ItemClassification.progression),
     "Progressive Painting Unlock": ItemData(2000300003, ItemClassification.progression),
+    "Homing Attack": ItemData(2000300054, ItemClassification.progression),
+    "Object Grab": ItemData(2000300055, ItemClassification.progression),
     # DLC
     "Metro Ticket - Yellow": ItemData(2000300045, ItemClassification.progression, HatDLC.dlc2),
     "Metro Ticket - Green": ItemData(2000300046, ItemClassification.progression, HatDLC.dlc2),
