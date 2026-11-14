@@ -423,10 +423,6 @@ def set_moderate_rules(world: "HatInTimeWorld"):
     set_rule(world.multiworld.get_location("Act Completion (Welcome to Mafia Town)", world.player),
              lambda state: True)
 
-    # Moderate: Above Boats via Ice Hat Sliding
-    add_rule(world.multiworld.get_location("Mafia Town - Above Boats", world.player),
-             lambda state: can_use_hat(state, world, HatType.ICE), "or")
-
     # Moderate: Can bounce across the lava to get this without Hookshot (need to die though)
     add_rule(world.multiworld.get_location("Mafia Town - Above Boats", world.player),
              lambda state: state.has("HUMT Access", world.player), "or")
