@@ -1,7 +1,7 @@
 from worlds.AutoWorld import CollectionState
 from worlds.generic.Rules import add_rule, set_rule
 from .Locations import location_table, zipline_unlocks, is_location_valid, shop_locations, event_locs, \
-    TASKSANITY_START_ID
+    TASKSANITY_START_ID, snatcher_coins, zero_jumps
 from .Types import HatType, ChapterIndex, hat_type_to_item, Difficulty, HitType, HatInTimeLocation
 from BaseClasses import Location, Entrance, Region
 from typing import TYPE_CHECKING, List, Callable, Union, Dict
@@ -379,6 +379,9 @@ def set_specific_rules(world: "HatInTimeWorld"):
 
     difficulty: Difficulty = get_difficulty(world)
 
+    if difficulty == Difficulty.EASY:
+        set_easy_rules(world)
+
     if difficulty >= Difficulty.MODERATE:
         set_moderate_rules(world)
 
@@ -387,6 +390,25 @@ def set_specific_rules(world: "HatInTimeWorld"):
 
     if difficulty >= Difficulty.EXPERT:
         set_expert_rules(world)
+
+
+def set_easy_rules(world: "HatInTimeWorld"):
+    add_rule(world.multiworld.get_entrance("Telescope -> Time's End", world.player), lambda state: can_use_hat(state, world, HatType.ICE))
+    set_rule(world.multiworld.get_location("Alpine Skyline - Mystifying Time Mesa: Zipline", world.player), lambda state: can_use_hat(state, world, HatType.TIME_STOP))
+    set_rule(world.multiworld.get_location("Alpine Skyline - Mystifying Time Mesa: Gate Puzzle", world.player), lambda state: can_use_hat(state, world, HatType.TIME_STOP))
+    locations = {**location_table, **snatcher_coins, **zero_jumps}
+    for loc, data in locations.items():
+        if data.paintings >= 3:
+            location: Location
+            try:
+                location = world.multiworld.get_location(loc, world.player)
+            except KeyError:
+                continue
+
+            add_rule(location, lambda state: can_use_hat(state, world, HatType.DWELLER))
+
+    if world.options.ShuffleDirectorTokens:
+        add_rule(world.multiworld.get_location("Murder on the Owl Express - Conductor Token: Recreational Room", world.player), lambda state: can_use_hat(state, world, HatType.ICE))
 
 
 def set_moderate_rules(world: "HatInTimeWorld"):
