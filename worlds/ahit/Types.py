@@ -49,6 +49,7 @@ class ChapterIndex(IntEnum):
 
 
 class Difficulty(IntEnum):
+    EASY = -2
     NORMAL = -1
     MODERATE = 0
     HARD = 1

@@ -149,11 +149,12 @@ class LogicDifficulty(Choice):
     For an exhaustive list of all logic tricks for each difficulty, see this Google Doc:
     https://docs.google.com/document/d/1x9VLSQ5davfx1KGamR9T0mD5h69_lDXJ6H7Gq7knJRI/edit?usp=sharing"""
     display_name = "Logic Difficulty"
+    option_easy = -2
     option_normal = -1
     option_moderate = 0
     option_hard = 1
     option_expert = 2
-    default = -1
+    default = -2
 
 
 class CTRLogic(Choice):
@@ -602,7 +603,6 @@ class DWExcludeAnnoyingBonuses(DefaultOnToggle):
     """If Death Wish full completions are shuffled in, exclude tedious Death Wish full completions from the pool.
     Excluded bonus Death Wishes automatically reward their bonus stamps upon completion of the main objective.
     This option currently excludes the following bonuses:
-    - So You're Back From Outer Space
     - Encore! Encore!
     - Snatcher's Hit List
     - 10 Seconds until Self-Destruct
