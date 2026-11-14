@@ -3,8 +3,8 @@ from .Regions import create_region
 from BaseClasses import Region, LocationProgressType, ItemClassification
 from worlds.generic.Rules import add_rule
 from typing import List, TYPE_CHECKING
-from .Locations import death_wishes
-from .Options import EndGoal
+from .Locations import death_wishes, death_wish_rewards
+from .Options import EndGoal, LockDeathWishes
 
 if TYPE_CHECKING:
     from . import HatInTimeWorld
@@ -198,13 +198,20 @@ def create_dw_regions(world: "HatInTimeWorld"):
             dw = create_region(world, death_wish_name)
             prev_dw.connect(dw)
             create_dw_locations(world, dw)
-            prev_dw = dw
+            # Let everything connect to the Death Wish map region in open shuffle mode
+            if world.options.LockDeathWishes != LockDeathWishes.option_open_shuffle:
+                prev_dw = dw
     else:
         # DWShuffle is disabled, use vanilla connections
         for key in death_wishes.keys():
             if key == "Snatcher Coins in Nyakuza Metro" and not world.is_dlc2():
                 world.excluded_dws.append(key)
                 continue
+
+            # If DLC1 is disabled, keep these, but make them excluded.
+            if key == "Rift Collapse: Deep Sea" or key == "Cruisin' for a Bruisin'":
+                if not world.is_dlc1():
+                    world.excluded_dws.append(key)
 
             dw = create_region(world, key)
             if key == "Beat the Heat":
@@ -220,6 +227,9 @@ def create_dw_regions(world: "HatInTimeWorld"):
 def create_dw_locations(world: "HatInTimeWorld", dw: Region):
     loc_id = death_wishes[dw.name]
     main_objective = HatInTimeLocation(world.player, f"{dw.name} - Main Objective", loc_id, dw)
+    reward = None
+    if dw.name in death_wish_rewards:
+        reward = HatInTimeLocation(world.player, f"{dw.name} - Item Reward", loc_id+300, dw)
     full_clear = HatInTimeLocation(world.player, f"{dw.name} - All Clear", loc_id + 1, dw)
     main_stamp = HatInTimeLocation(world.player, f"Main Stamp - {dw.name}", None, dw)
     bonus_stamps = HatInTimeLocation(world.player, f"Bonus Stamps - {dw.name}", None, dw)
@@ -235,8 +245,12 @@ def create_dw_locations(world: "HatInTimeWorld", dw: Region):
     if dw.name in world.excluded_dws:
         main_objective.progress_type = LocationProgressType.EXCLUDED
         full_clear.progress_type = LocationProgressType.EXCLUDED
+        if reward is not None:
+            reward.progress_type = LocationProgressType.EXCLUDED
     elif world.is_bonus_excluded(dw.name):
         full_clear.progress_type = LocationProgressType.EXCLUDED
 
     dw.locations.append(main_objective)
     dw.locations.append(full_clear)
+    if reward is not None:
+        dw.locations.append(reward)

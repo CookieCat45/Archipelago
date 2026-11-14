@@ -1,8 +1,8 @@
 from BaseClasses import Item, ItemClassification
 from .Types import HatDLC, HatType, hat_type_to_item, Difficulty, ItemData, HatInTimeItem
-from .Locations import get_total_locations
+from .Locations import get_total_locations, death_wish_rewards
 from .Rules import get_difficulty
-from .Options import get_total_time_pieces, CTRLogic
+from .Options import get_total_time_pieces, CTRLogic, LockDeathWishes
 from typing import List, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -38,10 +38,31 @@ def create_itempool(world: "HatInTimeWorld") -> List[Item]:
             continue
 
         item_type: ItemClassification = item_table.get(name).classification
+        if item_type is ItemClassification.filler or item_type is ItemClassification.trap:
+            continue
+
+        if world.is_dw() and world.options.LockDeathWishes:
+            if name == "Progressive Death Wish Contract":
+                if world.options.DWShuffle and world.options.LockDeathWishes != LockDeathWishes.option_open_shuffle:
+                    itempool += create_multiple_items(world, name, len(world.dw_shuffle), item_type)
+                    if world.is_dw_only():
+                        world.multiworld.push_precollected(world.create_item("Progressive Death Wish Contract"))
+                continue
+            elif "Death Wish Contract - " in name:
+                if name == world.start_dw_unlock:
+                    continue
+                if world.options.DWShuffle and world.options.LockDeathWishes != LockDeathWishes.option_open_shuffle:
+                    continue
+                dw_name = name.replace("Death Wish Contract - ", "")
+                if world.is_dw_excluded(dw_name):
+                    continue
+        elif name in dw_unlocks:
+            continue
 
         if world.is_dw_only():
-            if item_type is ItemClassification.progression \
-               or item_type is ItemClassification.progression_skip_balancing:
+            if name == "Item Magnet Badge":
+                item_type = ItemClassification.useful
+            elif item_type & ItemClassification.progression and name not in dw_unlocks:
                 continue
         else:
             if name == "Scooter Badge":
@@ -53,9 +74,6 @@ def create_itempool(world: "HatInTimeWorld") -> List[Item]:
         # some death wish bonuses require one hit hero + hookshot
         if world.is_dw() and name == "Badge Pin" and not world.is_dw_only():
             item_type = ItemClassification.progression
-
-        if item_type is ItemClassification.filler or item_type is ItemClassification.trap:
-            continue
 
         if name in act_contracts.keys() and not world.options.ShuffleActContracts:
             continue
@@ -281,6 +299,48 @@ alps_hooks = {
     "Zipline Unlock - The Twilight Bell Path": ItemData(2000300207, ItemClassification.progression),
 }
 
+dw_unlocks = {
+    "Progressive Death Wish Contract": ItemData(2000340000, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Beat the Heat": ItemData(2000350000, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Snatcher's Hit List": ItemData(2000350002, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - So You're Back From Outer Space": ItemData(2000350004, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Collect-a-thon": ItemData(2000350006, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Rift Collapse: Mafia of Cooks": ItemData(2000350008, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - She Speedran from Outer Space": ItemData(2000350010, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Mafia's Jumps": ItemData(2000350012, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Vault Codes in the Wind": ItemData(2000350014, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Encore! Encore!": ItemData(2000350016, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Snatcher Coins in Mafia Town": ItemData(2000350018, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Security Breach": ItemData(2000350020, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - The Great Big Hootenanny": ItemData(2000350022, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Rift Collapse: Dead Bird Studio": ItemData(2000350024, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - 10 Seconds until Self-Destruct": ItemData(2000350026, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Killing Two Birds": ItemData(2000350028, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Snatcher Coins in Battle of the Birds": ItemData(2000350030, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Zero Jumps": ItemData(2000350032, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Speedrun Well": ItemData(2000350034, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Rift Collapse: Sleepy Subcon": ItemData(2000350036, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Boss Rush": ItemData(2000350038, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Quality Time with Snatcher": ItemData(2000350040, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Breaching the Contract": ItemData(2000350042, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Snatcher Coins in Subcon Forest": ItemData(2000350044, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Bird Sanctuary": ItemData(2000350046, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Rift Collapse: Alpine Skyline": ItemData(2000350048, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Wound-Up Windmill": ItemData(2000350050, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - The Illness has Speedrun": ItemData(2000350052, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Snatcher Coins in Alpine Skyline": ItemData(2000350054, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Camera Tourist": ItemData(2000350056, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - The Mustache Gauntlet": ItemData(2000350058, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - No More Bad Guys": ItemData(2000350060, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Seal the Deal": ItemData(2000350062, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Rift Collapse: Deep Sea": ItemData(2000350064, ItemClassification.progression, HatDLC.dlc1_dw),
+    "Death Wish Contract - Cruisin' for a Bruisin'": ItemData(2000350066, ItemClassification.progression, HatDLC.dlc1_dw),
+    "Death Wish Contract - Community Rift: Rhythm Jump Studio": ItemData(2000350068, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Community Rift: Twilight Travels": ItemData(2000350070, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Community Rift: The Mountain Rift": ItemData(2000350072, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Snatcher Coins in Nyakuza Metro": ItemData(2000350074, ItemClassification.progression, HatDLC.dlc2_dw),
+}
+
 relic_groups = {
     "Burger": {"Relic (Burger Patty)", "Relic (Burger Cushion)"},
     "Train": {"Relic (Mountain Set)", "Relic (Train)"},
@@ -307,4 +367,5 @@ item_table = {
     **ahit_items,
     **act_contracts,
     **alps_hooks,
+    **dw_unlocks,
 }

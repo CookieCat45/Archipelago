@@ -77,6 +77,7 @@ class HatInTimeWorld(World):
         self.dw_shuffle: List[str] = []
         self.nyakuza_thug_items: Dict[str, int] = {}
         self.badge_seller_count: int = 0
+        self.start_dw_unlock = ""
 
     def get_filler_item_name(self) -> str:
         return self.random.choices(list(junk_weights.keys()), weights=junk_weights.values(), k=1)[0]
@@ -156,36 +157,17 @@ class HatInTimeWorld(World):
         self.multiworld.itempool += create_itempool(self)
 
     def set_rules(self):
+        if self.is_dw():
+            set_dw_rules(self)
+
         if self.is_dw_only():
-            # we already have all items if this is the case, no need for rules
-            self.multiworld.push_precollected(HatInTimeItem("Death Wish Only Mode", ItemClassification.progression,
-                                              None, self.player))
-
-            self.multiworld.completion_condition[self.player] = lambda state: state.has("Death Wish Only Mode",
-                                                                                        self.player)
-
-            if not self.options.DWEnableBonus:
-                for name in death_wishes:
-                    if name == "Snatcher Coins in Nyakuza Metro" and not self.is_dlc2():
-                        continue
-
-                    if self.options.DWShuffle and name not in self.dw_shuffle:
-                        continue
-
-                    full_clear = self.multiworld.get_location(f"{name} - All Clear", self.player)
-                    full_clear.address = None
-                    full_clear.place_locked_item(HatInTimeItem("Nothing", ItemClassification.filler, None, self.player))
-                    full_clear.show_in_spoiler = False
-
+            # we don't need the rest of the logic for dw only
             return
 
         if self.options.ActRandomizer:
             randomize_act_entrances(self)
 
         set_rules(self)
-
-        if self.is_dw():
-            set_dw_rules(self)
 
     def create_item(self, name: str) -> Item:
         return create_item(self, name)

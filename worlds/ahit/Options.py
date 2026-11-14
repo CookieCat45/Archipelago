@@ -514,12 +514,16 @@ class DeathWishOnly(Toggle):
     """An alternative gameplay mode that allows you to exclusively play Death Wish in a seed.
     This has the following effects:
     - Death Wish is instantly unlocked from the start
-    - All hats and other progression items are instantly given to you
+    - All hats and other progression items (except Death Wish unlock items) are instantly given to you
     - Useful items such as Fast Hatter Badge will still be in the item pool instead of in your inventory at the start
     - All chapters and their levels are unlocked, act shuffle is forced off
     - Any checks other than Death Wish contracts are completely removed
     - All Pons in the item pool are replaced with Health Pons or random cosmetics
-    - The EndGoal option is forced to complete Seal the Deal"""
+    - The EndGoal option is forced to complete Seal the Deal
+
+    WARNING: Due to Death Wish contracts having a small number of locations, you may run into errors when attempting
+    to generate solo seeds with some option combinations. Turning on bonus checks or un-excluding contracts
+    may be required in that case."""
     display_name = "Death Wish Only"
 
 
@@ -549,6 +553,20 @@ class DWShuffleCountMax(Range):
     default = 25
 
 
+class LockDeathWishes(Choice):
+    """Locks each individual Death Wish behind an item. The way this functions depends on the DWShuffle option:
+    - If DWShuffle is disabled, each Death Wish will have an individual unlock item, e.g. 'Death Wish Contract - Beat the Heat'
+    - If DWShuffle is enabled, Death Wishes will be locked behind a 'Progressive Death Wish Contract' item.
+    - If DWShuffle is enabled and open_shuffle is chosen, each Death Wish will have an individual unlock item,
+    and Death Wishes will NOT be locked behind the completion of previous contracts.
+    This option will also apply to DeathWishOnly mode."""
+    display_name = "Lock Death Wishes"
+    option_false = 0
+    option_true = 1
+    option_open_shuffle = 2
+    default = 0
+
+
 class DWEnableBonus(Toggle):
     """In Death Wish, add a location for completing all of a DW contract's bonuses,
     in addition to the location for completing the DW contract normally.
@@ -574,7 +592,9 @@ class DWExcludeAnnoyingContracts(DefaultOnToggle):
     - The Mustache Gauntlet
     - Rift Collapse: Deep Sea
     - Cruisin' for a Bruisin'
-    - Seal the Deal (non-excluded if goal, but the checks are still excluded)"""
+    - Seal the Deal (non-excluded if goal, but the checks are still excluded)
+
+    Note that you can also exclude contracts by excluding their Main Objective location in exclude_locations"""
     display_name = "Exclude Annoying Death Wish Contracts"
 
 
@@ -596,7 +616,9 @@ class DWExcludeAnnoyingBonuses(DefaultOnToggle):
     - The Mustache Gauntlet
     - Rift Collapse: Deep Sea
     - Cruisin' for a Bruisin'
-    - Seal the Deal"""
+    - Seal the Deal
+
+    Note that you can also exclude contract bonuses by excluding their All Clear location in exclude_locations"""
     display_name = "Exclude Annoying Death Wish Full Completions"
 
 
@@ -703,6 +725,7 @@ class AHITOptions(PerGameCommonOptions):
     DWShuffle:                    DWShuffle
     DWShuffleCountMin:            DWShuffleCountMin
     DWShuffleCountMax:            DWShuffleCountMax
+    LockDeathWishes:              LockDeathWishes
     DeathWishOnly:                DeathWishOnly
     DWEnableBonus:                DWEnableBonus
     DWAutoCompleteBonuses:        DWAutoCompleteBonuses
@@ -771,8 +794,8 @@ ahit_option_groups: Dict[str, List[Any]] = {
                               NyakuzaThugMaxShopItems, BaseballBat, NoTicketSkips],
 
     "Death Wish Options": [EnableDeathWish, DWTimePieceRequirement, DWShuffle, DWShuffleCountMin, DWShuffleCountMax,
-                           DWEnableBonus, DWAutoCompleteBonuses, DWExcludeAnnoyingContracts, DWExcludeAnnoyingBonuses,
-                           DWExcludeCandles, DeathWishOnly],
+                           LockDeathWishes, DWEnableBonus, DWAutoCompleteBonuses, DWExcludeAnnoyingContracts,
+                           DWExcludeAnnoyingBonuses, DWExcludeCandles, DeathWishOnly],
 
     "Trap Options": [TrapChance, BabyTrapWeight, LaserTrapWeight, ParadeTrapWeight]
 }
@@ -807,6 +830,7 @@ slot_data_options: List[str] = [
 
     "EnableDeathWish",
     "DWShuffle",
+    "LockDeathWishes",
     "DeathWishOnly",
     "DWEnableBonus",
     "DWAutoCompleteBonuses",

@@ -24,8 +24,12 @@ def get_total_locations(world: "HatInTimeWorld") -> int:
             total += len(world.dw_shuffle)
             if world.options.DWEnableBonus:
                 total += len(world.dw_shuffle)
+
+            for dw in world.dw_shuffle:
+                if dw in death_wish_rewards:
+                    total += 1
         else:
-            total += 37
+            total += 37 + len(death_wish_rewards)
             if world.is_dlc2():
                 total += 1
 
@@ -107,6 +111,8 @@ def get_location_names() -> Dict[str, int]:
     for (key, loc_id) in death_wishes.items():
         names.setdefault(f"{key} - Main Objective", loc_id)
         names.setdefault(f"{key} - All Clear", loc_id+1)
+        if key in death_wish_rewards:
+            names.setdefault(f"{key} - Item Reward", loc_id+300)
 
     return names
 
@@ -1092,6 +1098,29 @@ death_wishes = {
     "Community Rift: The Mountain Rift": 2000350072,
     "Snatcher Coins in Nyakuza Metro": 2000350074,
 }
+
+death_wish_rewards = [
+    "Beat the Heat",
+    "Encore! Encore!",
+    "Snatcher Coins in Mafia Town",
+    "Rift Collapse: Mafia of Cooks",
+    "Vault Codes in the Wind",
+    "Rift Collapse: Dead Bird Studio",
+    "Killing Two Birds",
+    "Zero Jumps",
+    "Snatcher Coins in Battle of the Birds",
+    "Boss Rush",
+    "Breaching the Contract",
+    "Snatcher Coins in Subcon Forest",
+    "Snatcher Coins in Alpine Skyline",
+    "Camera Tourist",
+    "The Illness has Speedrun",
+    "The Mustache Gauntlet",
+    "No More Bad Guys",
+    "Rift Collapse: Deep Sea",
+    "Cruisin' for a Bruisin'",
+    "Seal the Deal",
+]
 
 location_table = {
     **ahit_locations,

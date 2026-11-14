@@ -2,12 +2,12 @@ from worlds.AutoWorld import CollectionState
 from .Rules import can_use_hat, can_use_hookshot, can_hit, zipline_logic, get_difficulty, has_paintings, \
     can_grab_objects
 from .Types import HatType, Difficulty, HatInTimeLocation, HatInTimeItem, LocData, HitType
-from .DeathWishLocations import dw_prereqs, dw_candles
+from .DeathWishLocations import dw_prereqs, dw_candles, dw_classes
 from BaseClasses import Entrance, Location, ItemClassification
 from worlds.generic.Rules import add_rule, set_rule
 from typing import List, Callable, TYPE_CHECKING
-from .Locations import death_wishes
-from .Options import EndGoal
+from .Locations import death_wishes, death_wish_rewards
+from .Options import EndGoal, LockDeathWishes
 
 if TYPE_CHECKING:
     from . import HatInTimeWorld
@@ -119,7 +119,8 @@ required_snatcher_coins = {
 
 def set_dw_rules(world: "HatInTimeWorld"):
     if "Snatcher's Hit List" not in world.excluded_dws or "Camera Tourist" not in world.excluded_dws:
-        set_enemy_rules(world)
+        if not world.is_dw_only():
+            set_enemy_rules(world)
 
     dw_list: List[str] = []
     if world.options.DWShuffle:
@@ -151,25 +152,59 @@ def set_dw_rules(world: "HatInTimeWorld"):
         if world.is_dw_excluded(name):
             continue
 
-        modify_dw_rules(world, name)
-        add_dw_rules(world, main_objective)
-        add_dw_rules(world, all_clear)
-        add_rule(main_stamp, main_objective.access_rule)
-        add_rule(all_clear, main_objective.access_rule)
-        # Only set bonus stamp rules to require All Clear if we don't auto complete bonuses
-        if not world.options.DWAutoCompleteBonuses and not world.is_bonus_excluded(all_clear.name):
-            add_rule(bonus_stamps, all_clear.access_rule)
-        else:
-            # As soon as the Main Objective is completed, the bonuses auto-complete.
-            add_rule(bonus_stamps, main_objective.access_rule)
+        if not world.is_dw_only():
+            add_dw_rules(world, main_objective)
+            add_dw_rules(world, all_clear)
+            modify_dw_rules(world, name)
+            add_rule(main_stamp, main_objective.access_rule)
+            add_rule(all_clear, main_objective.access_rule)
+
+            # Only set bonus stamp rules to require All Clear if we don't auto complete bonuses
+            if not world.options.DWAutoCompleteBonuses and not world.is_bonus_excluded(all_clear.name):
+                add_rule(bonus_stamps, all_clear.access_rule)
+            else:
+                # As soon as the Main Objective is completed, the bonuses auto-complete.
+                add_rule(bonus_stamps, main_objective.access_rule)
+
+            if name in death_wish_rewards:
+                reward = world.multiworld.get_location(f"{name} - Item Reward", world.player)
+                add_rule(reward, main_objective.access_rule)
 
     if world.options.DWShuffle:
-        for i in range(len(world.dw_shuffle)-1):
-            name = world.dw_shuffle[i+1]
-            prev_dw = world.multiworld.get_region(world.dw_shuffle[i], world.player)
-            entrance = world.multiworld.get_entrance(f"{prev_dw.name} -> {name}", world.player)
-            add_rule(entrance, lambda state, n=prev_dw.name: state.has(f"1 Stamp - {n}", world.player))
+        if world.options.LockDeathWishes != LockDeathWishes.option_open_shuffle:
+            for i in range(len(world.dw_shuffle)-1):
+                name = world.dw_shuffle[i+1]
+                prev_dw = world.multiworld.get_region(world.dw_shuffle[i], world.player)
+                entrance = world.multiworld.get_entrance(f"{prev_dw.name} -> {name}", world.player)
+                add_rule(entrance, lambda state, n=prev_dw.name: state.has(f"1 Stamp - {n}", world.player))
+        if world.options.LockDeathWishes:
+            count = 0
+            prev_dw = "Death Wish Map"
+            for dw in world.dw_shuffle:
+                entrance: Entrance
+                if world.options.LockDeathWishes == LockDeathWishes.option_open_shuffle:
+                    entrance = world.multiworld.get_entrance(f"Death Wish Map -> {dw}", world.player)
+                else:
+                    entrance = world.multiworld.get_entrance(f"{prev_dw} -> {dw}", world.player)
+                    prev_dw = dw
+
+                if world.options.LockDeathWishes == LockDeathWishes.option_open_shuffle:
+                    add_rule(entrance, lambda state, n=dw: state.has(f"Death Wish Contract - {n}", world.player))
+                else:
+                    add_rule(entrance, lambda state, c=count+1: state.has("Progressive Death Wish Contract", world.player, c))
+                    count += 1
+
+            if world.options.EndGoal == EndGoal.option_seal_the_deal:
+                if world.options.LockDeathWishes == LockDeathWishes.option_open_shuffle:
+                    # Make sure every other Death Wish is completed in open shuffle
+                    entrance = world.multiworld.get_entrance(f"Death Wish Map -> Seal the Deal", world.player)
+                    for dw in world.dw_shuffle:
+                        if dw == "Seal the Deal":
+                            continue
+                        add_rule(entrance, lambda state, n=dw: state.has(f"1 Stamp - {n}", world.player))
+
     else:
+        # Vanilla map
         for key, reqs in dw_prereqs.items():
             if key == "Snatcher Coins in Nyakuza Metro" and not world.is_dlc2():
                 continue
@@ -188,6 +223,24 @@ def set_dw_rules(world: "HatInTimeWorld"):
                 for rule in access_rules:
                     add_rule(entrance, rule)
 
+        if world.options.LockDeathWishes:
+            for name in dw_list:
+                if name == "Snatcher Coins in Nyakuza Metro" and not world.is_dlc2():
+                    continue
+
+                region = world.multiworld.get_region(name, world.player)
+                for entrance in region.entrances:
+                    add_rule(entrance, lambda state, n=name: state.has(f"Death Wish Contract - {n}", world.player))
+
+    if world.is_dw_only() and world.options.LockDeathWishes:
+        if not world.options.DWShuffle or world.options.LockDeathWishes == LockDeathWishes.option_open_shuffle:
+            start_unlock: str
+            if not world.options.DWShuffle:
+                start_unlock = "Death Wish Contract - Beat the Heat"
+            else:
+                start_unlock = f"Death Wish Contract - {dw_list[world.random.randint(0, len(dw_list)-1)]}"
+            world.multiworld.push_precollected(world.create_item(start_unlock))
+            world.start_dw_unlock = start_unlock
     if world.options.EndGoal == EndGoal.option_seal_the_deal:
         world.multiworld.completion_condition[world.player] = lambda state: \
             state.has("1 Stamp - Seal the Deal", world.player)
