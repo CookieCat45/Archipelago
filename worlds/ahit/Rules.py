@@ -488,6 +488,10 @@ def set_moderate_rules(world: "HatInTimeWorld"):
         set_rule(world.multiworld.get_location("Act Completion (Time Rift - Deep Sea)", world.player),
                  lambda state: can_use_hookshot(state, world) and can_use_hat(state, world, HatType.DWELLER))
 
+        if world.options.ShuffleRiftPons:
+            set_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 3rd Floor Dweller Tower Roof", world.player),
+                     lambda state: can_use_hookshot(state, world))
+
     # There is a glitched fall damage volume near the Yellow Overpass time piece that warps the player to Pink Paw.
     # Yellow Overpass time piece can also be reached without Hookshot quite easily.
     if world.is_dlc2():
@@ -774,6 +778,9 @@ def set_subcon_rules(world: "HatInTimeWorld"):
     set_rule(world.get_entrance("SF Behind Boss Firewall -> SF Boss Arena"),
              lambda state: state.has("TOD Access", world.player)
              and can_use_hookshot(state, world))
+
+    add_rule(world.multiworld.get_location("Subcon Forest - Boss Arena Chest", world.player),
+             lambda state: state.has("TOD Access", world.player) or state.has("YCHE Access", world.player))
 
     # The Act Completion is in the Toilet of Doom region, so the same rules as passing the boss firewall and crossing
     # the boss arena gap are required. "TOD Access" is implied from the region so does not need to be included in the

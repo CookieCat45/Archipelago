@@ -531,13 +531,12 @@ class DeathWishOnly(Toggle):
     - All hats and other progression items (except Death Wish unlock items) are instantly given to you
     - Useful items such as Fast Hatter Badge will still be in the item pool instead of in your inventory at the start
     - All chapters and their levels are unlocked, act shuffle is forced off
-    - Any checks other than Death Wish contracts are completely removed
+    - Any checks other than those in Death Wish contracts are completely removed
     - All Pons in the item pool are replaced with Health Pons or random cosmetics
-    - The EndGoal option is forced to complete Seal the Deal
+    - The EndGoal option is forced to Seal the Deal
 
-    WARNING: Due to Death Wish contracts having a small number of locations, you may run into errors when attempting
-    to generate solo seeds with some option combinations. Turning on bonus checks or un-excluding contracts
-    may be required in that case."""
+    WARNING: Due to the fact that most Death Wish contracts only have a small number of locations, you may run into errors when attempting
+    to generate solo seeds with some option combinations. Turning on bonus checks or un-excluding contracts may be required in that case."""
     display_name = "Death Wish Only"
 
 

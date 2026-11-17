@@ -1335,6 +1335,7 @@ event_locs = {
     "TOD Access": LocData(0, "Toilet of Doom"),
     "AFR Access": LocData(0, "Alpine Free Roam"),
     "TIHS Access": LocData(0, "The Illness has Spread"),
+    "YCHE Access": LocData(0, "Your Contract has Expired"),
 
     "Birdhouse Cleared": LocData(0, "The Birdhouse", act_event=True),
     "Lava Cake Cleared": LocData(0, "The Lava Cake", act_event=True),
