@@ -7,7 +7,7 @@ from BaseClasses import Entrance, Location, ItemClassification
 from worlds.generic.Rules import add_rule, set_rule
 from typing import List, Callable, TYPE_CHECKING
 from .Locations import death_wishes, death_wish_rewards
-from .Options import EndGoal, LockDeathWishes
+from .Options import EndGoal, LockDeathWishes, ShuffleRiftPons
 
 if TYPE_CHECKING:
     from . import HatInTimeWorld
@@ -25,7 +25,7 @@ dw_requirements = {
 
     "Security Breach": LocData(hit_type=HitType.umbrella_or_brewing),
     "10 Seconds until Self-Destruct": LocData(hookshot=True),
-    "Community Rift: Rhythm Jump Studio": LocData(required_hats=[HatType.ICE], hit_type=HitType.punchable),
+    "Community Rift: Rhythm Jump Studio": LocData(hit_type=HitType.punchable),
     "Rift Collapse: Dead Bird Studio": LocData(hit_type=HitType.punchable),
 
     "Rift Collapse: Sleepy Subcon": LocData(hit_type=HitType.punchable),
@@ -56,8 +56,10 @@ dw_bonus_requirements = {
     "So You're Back From Outer Space": LocData(required_hats=[HatType.SPRINT], hit_type=HitType.stompable_enemy),
     "Vault Codes in the Wind": LocData(required_hats=[HatType.SPRINT], hit_type=HitType.stompable_enemy),
     "Encore! Encore!": LocData(misc_required=["One-Hit Hero Badge"]),
+    "Rift Collapse: Mafia of Cooks": LocData(hit_type=HitType.stompable_enemy),
 
     "10 Seconds until Self-Destruct": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
+    "Community Rift: Rhythm Jump Studio": LocData(required_hats=[HatType.ICE]),
 
     "Boss Rush": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
     "Community Rift: Twilight Travels": LocData(required_hats=[HatType.BREWING]),
@@ -66,7 +68,6 @@ dw_bonus_requirements = {
                               hit_type=HitType.stompable_enemy),
     "Wound-Up Windmill": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
     "The Illness has Speedrun": LocData(required_hats=[HatType.SPRINT]),
-    "Rift Collapse: Alpine Skyline": LocData(hit_type=HitType.stompable_enemy),
 
     "The Mustache Gauntlet": LocData(required_hats=[HatType.ICE]),
 
@@ -338,6 +339,39 @@ def modify_dw_rules(world: "HatInTimeWorld", name: str):
         if difficulty < Difficulty.HARD:
             if not world.options.DWEnableBonus or "Breaching the Contract" in world.excluded_bonuses:
                 add_rule(main_objective, lambda state: state.has("Umbrella", world.player))
+
+    elif name == "Community Rift: Twilight Travels":
+        # There is a red dweller that needs to be hit with either Brewing Hat or Projectile Badge, and it can't be stood on top of
+        add_rule(world.multiworld.get_location("Community Rift: Twilight Travels - Main Objective", world.player),
+                 lambda state: can_use_hat(state, world, HatType.BREWING) or state.has("Umbrella", world.player) and state.has("Projectile Badge", world.player))
+
+        rule = (lambda state: can_use_hat(state, world, HatType.DWELLER) and can_use_hookshot(state, world)
+                              and (can_use_hat(state, world, HatType.BREWING) or state.has("Umbrella", world.player) and state.has("Projectile Badge", world.player)))
+
+        if world.options.ShuffleRiftPons == ShuffleRiftPons.option_true_dw:
+            set_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 4th Floor Last Cliff", world.player), rule)
+        if world.options.ShuffleStorybookPages:
+            set_rule(world.multiworld.get_location("Twilight Travels - Page: Behind Rift Ball", world.player), rule)
+
+        if world.options.LockHomingAttack:
+            if world.options.ShuffleRiftPons == ShuffleRiftPons.option_true_dw:
+                add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 4th Floor Spider", world.player),
+                         lambda state: state.has("Homing Attack", world.player)
+                         or can_use_hat(state, world, HatType.BREWING)
+                         or can_use_hat(state, world, HatType.ICE))
+
+        if world.options.LogicDifficulty <= Difficulty.NORMAL:
+            if world.options.ShuffleRiftPons == ShuffleRiftPons.option_true_dw:
+                add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 2nd Floor Dweller Room Top", world.player),
+                         lambda state: can_use_hat(state, world, HatType.BREWING))
+                add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 2nd Floor Dweller Room Double Wall", world.player),
+                         lambda state: can_use_hat(state, world, HatType.BREWING))
+
+            if world.options.ShuffleStorybookPages:
+                add_rule(world.multiworld.get_location("Twilight Travels - Page: Double Dweller Wall", world.player),
+                         lambda state: can_use_hat(state, world, HatType.BREWING))
+                add_rule(world.multiworld.get_location("Twilight Travels - Page: Dweller Room Pillar", world.player),
+                         lambda state: can_use_hat(state, world, HatType.BREWING))
 
     elif name == "Killing Two Birds":
         if world.options.LockHomingAttack:

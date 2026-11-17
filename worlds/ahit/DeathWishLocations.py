@@ -1,9 +1,9 @@
 from .Types import HatInTimeLocation, HatInTimeItem
 from .Regions import create_region
-from BaseClasses import Region, LocationProgressType, ItemClassification
+from BaseClasses import Region, LocationProgressType, ItemClassification, Location
 from worlds.generic.Rules import add_rule
 from typing import List, TYPE_CHECKING
-from .Locations import death_wishes, death_wish_rewards
+from .Locations import death_wishes, death_wish_rewards, location_table
 from .Options import EndGoal, LockDeathWishes
 
 if TYPE_CHECKING:
@@ -208,11 +208,6 @@ def create_dw_regions(world: "HatInTimeWorld"):
                 world.excluded_dws.append(key)
                 continue
 
-            # If DLC1 is disabled, keep these, but make them excluded.
-            if key == "Rift Collapse: Deep Sea" or key == "Cruisin' for a Bruisin'":
-                if not world.is_dlc1():
-                    world.excluded_dws.append(key)
-
             dw = create_region(world, key)
             if key == "Beat the Heat":
                 dw_map.connect(dw, f"{dw_map.name} -> Beat the Heat")
@@ -247,6 +242,16 @@ def create_dw_locations(world: "HatInTimeWorld", dw: Region):
         full_clear.progress_type = LocationProgressType.EXCLUDED
         if reward is not None:
             reward.progress_type = LocationProgressType.EXCLUDED
+
+        for key, data in location_table.items():
+            if data.region == dw.name:
+                loc: Location
+                try:
+                    loc = world.multiworld.get_location(key, world.player)
+                except KeyError:
+                    continue
+
+                loc.progress_type = LocationProgressType.EXCLUDED
     elif world.is_bonus_excluded(dw.name):
         full_clear.progress_type = LocationProgressType.EXCLUDED
 

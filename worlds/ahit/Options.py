@@ -74,10 +74,10 @@ def adjust_options(world: "HatInTimeWorld"):
         world.options.ShuffleAlpineZiplines.value = 0
         world.options.ShuffleDirectorTokens.value = 0
         world.options.ShuffleSubconPaintings.value = 0
-        world.options.ShuffleStorybookPages.value = 0
+        #world.options.ShuffleStorybookPages.value = 0
         world.options.ShuffleActContracts.value = 0
         world.options.EnableDLC1.value = 0
-        world.options.LogicDifficulty.value = LogicDifficulty.option_normal
+        #world.options.LogicDifficulty.value = LogicDifficulty.option_normal
         world.options.DWTimePieceRequirement.value = 0
 
 
@@ -234,14 +234,27 @@ class LockObjectGrab(Toggle):
 
 
 class ShuffleStorybookPages(DefaultOnToggle):
-    """If enabled, each storybook page in the purple Time Rifts is an item check.
+    """If enabled, each storybook page in the purple Time Rifts (including Death Wish community rifts) is an item check.
     The Compass Badge can track these down for you."""
     display_name = "Shuffle Storybook Pages"
 
 
+class ShuffleRiftPons(Choice):
+    """If enabled, each Rift Pon in the purple Time Rifts is an item check.
+    The Compass Badge can track these down for you.
+    true_dw additionally shuffles Rift Pons found in Death Wish Rift Collapses and Community Rifts."""
+    display_name = "Shuffle Rift Pons"
+    option_false = 0
+    option_true = 1
+    option_true_dw = 2
+    default = 0
+
+
 class ShuffleDirectorTokens(Toggle):
     """If enabled, causes the Conductor/DJ Grooves tokens found in Chapter 2 levels to become item checks.
-    NOTE: This also includes the time bonus pickups from Train Rush, since the level doesn't have any tokens."""
+    NOTE: This also includes the time bonus pickups from Train Rush, since the level doesn't have any tokens.
+    Additionally, if the Great Big Hootenanny and/or 10 Seconds until Self-Destruct Death Wishes are present,
+    they will also have unique checks for tokens and time bonuses."""
     display_name = "Shuffle Director Tokens"
 
 
@@ -595,7 +608,7 @@ class DWExcludeAnnoyingContracts(DefaultOnToggle):
     - Cruisin' for a Bruisin'
     - Seal the Deal (non-excluded if goal, but the checks are still excluded)
 
-    Note that you can also exclude contracts by excluding their Main Objective location in exclude_locations"""
+    NOTE: You can also exclude contracts by excluding their Main Objective location in exclude_locations"""
     display_name = "Exclude Annoying Death Wish Contracts"
 
 
@@ -618,7 +631,7 @@ class DWExcludeAnnoyingBonuses(DefaultOnToggle):
     - Cruisin' for a Bruisin'
     - Seal the Deal
 
-    Note that you can also exclude contract bonuses by excluding their All Clear location in exclude_locations"""
+    NOTE: You can also exclude contract bonuses by excluding their All Clear location in exclude_locations"""
     display_name = "Exclude Annoying Death Wish Full Completions"
 
 
@@ -707,6 +720,7 @@ class AHITOptions(PerGameCommonOptions):
     StartWithCompassBadge:    StartWithCompassBadge
     CompassBadgeMode:         CompassBadgeMode
     ShuffleStorybookPages:    ShuffleStorybookPages
+    ShuffleRiftPons:          ShuffleRiftPons
     ShuffleDirectorTokens:    ShuffleDirectorTokens
     ShuffleActContracts:      ShuffleActContracts
     ShuffleSubconPaintings:   ShuffleSubconPaintings
@@ -774,7 +788,7 @@ class AHITOptions(PerGameCommonOptions):
 
 
 ahit_option_groups: Dict[str, List[Any]] = {
-    "General Options": [EndGoal, ShuffleStorybookPages, ShuffleDirectorTokens,
+    "General Options": [EndGoal, ShuffleStorybookPages, ShuffleRiftPons, ShuffleDirectorTokens,
                         ShuffleAlpineZiplines, ShuffleSubconPaintings,
                         ShuffleActContracts, MinPonCost, MaxPonCost, BadgeSellerMinItems, BadgeSellerMaxItems,
                         LogicDifficulty, NoPaintingSkips, CTRLogic, DeadBirdWinner],
@@ -815,6 +829,7 @@ slot_data_options: List[str] = [
     "StartWithCompassBadge",
     "CompassBadgeMode",
     "ShuffleStorybookPages",
+    "ShuffleRiftPons",
     "ShuffleDirectorTokens",
     "ShuffleActContracts",
     "ShuffleSubconPaintings",

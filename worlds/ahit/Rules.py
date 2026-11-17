@@ -553,6 +553,12 @@ def set_hard_rules(world: "HatInTimeWorld"):
         set_rule(world.multiworld.get_location("Act Completion (Time Rift - Deep Sea)", world.player),
                  lambda state: can_use_hookshot(state, world))
 
+        if world.options.ShuffleRiftPons:
+            set_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 5th Floor Dweller Wall Jump", world.player),
+                     lambda state: can_use_hookshot(state, world))
+            set_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 5th Floor Purple Dweller Tower", world.player),
+                     lambda state: can_use_hookshot(state, world))
+
     if world.is_dlc2():
         # Hard: clear Green Clean Manhole without Dweller Mask
         set_rule(world.multiworld.get_location("Act Completion (Green Clean Manhole)", world.player),
@@ -832,20 +838,35 @@ def set_dlc1_rules(world: "HatInTimeWorld"):
             location = world.multiworld.get_location(f"Tasksanity Check {i + 1}", world.player)
             add_rule(location, lambda state: can_grab_objects(state, world))
 
+    if world.options.ShuffleRiftPons:
+        if world.options.LogicDifficulty >= Difficulty.NORMAL:
+            add_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 2nd Floor Dweller Platform", world.player),
+                    lambda state: state.has("Item Magnet Badge", world.player), "or")
+
     if not world.options.ExcludeTour and world.options.LockObjectGrab:
         # If grab is locked, we need a way to get one last rift pon to pass the Alpine area
-        if world.options.ShuffleStorybookPages:
-            add_rule(world.multiworld.get_location("Tour - Page: The Finale - Near Entrance", world.player),
-                     lambda state: can_grab_objects(state, world) or can_use_hat(state, world, HatType.BREWING)
+        rule = (lambda state: can_grab_objects(state, world)
+                     or can_use_hat(state, world, HatType.BREWING)
                      or can_use_hat(state, world, HatType.DWELLER)
-                     or world.options.LogicDifficulty >= Difficulty.MODERATE
-                     and state.has("Item Magnet Badge", world.player))
+                     or world.options.LogicDifficulty >= Difficulty.NORMAL and state.has("Item Magnet Badge", world.player))
 
-        add_rule(world.multiworld.get_location("Act Completion (Time Rift - Tour)", world.player),
-                 lambda state: can_grab_objects(state, world) or can_use_hat(state, world, HatType.BREWING)
-                 or can_use_hat(state, world, HatType.DWELLER)
-                 or world.options.LogicDifficulty >= Difficulty.MODERATE
-                 and state.has("Item Magnet Badge", world.player))
+        add_rule(world.multiworld.get_location("Act Completion (Time Rift - Tour)", world.player), rule)
+        if world.options.ShuffleStorybookPages:
+            add_rule(world.multiworld.get_location("Tour - Page: The Finale - Near Entrance", world.player), rule)
+
+        if world.options.ShuffleRiftPons:
+            add_rule(world.multiworld.get_location("Tour - Rift Pon: 6th Floor Near Entrance", world.player), rule)
+            add_rule(world.multiworld.get_location("Tour - Rift Pon: 6th Floor Above Flamethrower", world.player), rule)
+            add_rule(world.multiworld.get_location("Tour - Rift Pon: 6th Floor Stone Platform Top", world.player), rule)
+            add_rule(world.multiworld.get_location("Tour - Rift Pon: 6th Floor Stone Arch Top", world.player), rule)
+            add_rule(world.multiworld.get_location("Tour - Rift Pon: 6th Floor Stone Pillar", world.player), rule)
+            if world.options.LogicDifficulty >= Difficulty.NORMAL:
+                add_rule(world.multiworld.get_location("Tour - Rift Pon: 4th Floor Behind Ice", world.player),
+                        lambda state: state.has("Item Magnet Badge", world.player), "or")
+                add_rule(world.multiworld.get_location("Tour - Rift Pon: 5th Floor Inside Dweller Block", world.player),
+                         lambda state: state.has("Item Magnet Badge", world.player), "or")
+                add_rule(world.multiworld.get_location("Tour - Rift Pon: 5th Floor Above Green Dweller Block", world.player),
+                         lambda state: state.has("Item Magnet Badge", world.player), "or")
 
 
 def set_dlc2_rules(world: "HatInTimeWorld"):

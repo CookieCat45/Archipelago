@@ -228,7 +228,7 @@ ahit_items = {
     "Time Stop Hat": ItemData(2000300053, ItemClassification.progression),
 
     # Badges
-    "Projectile Badge": ItemData(2000300024, ItemClassification.useful),
+    "Projectile Badge": ItemData(2000300024, ItemClassification.progression),
     "Fast Hatter Badge": ItemData(2000300025, ItemClassification.useful),
     "Hover Badge": ItemData(2000300026, ItemClassification.useful),
     "Hookshot Badge": ItemData(2000300027, ItemClassification.progression),
@@ -333,8 +333,8 @@ dw_unlocks = {
     "Death Wish Contract - The Mustache Gauntlet": ItemData(2000350058, ItemClassification.progression, HatDLC.death_wish),
     "Death Wish Contract - No More Bad Guys": ItemData(2000350060, ItemClassification.progression, HatDLC.death_wish),
     "Death Wish Contract - Seal the Deal": ItemData(2000350062, ItemClassification.progression, HatDLC.death_wish),
-    "Death Wish Contract - Rift Collapse: Deep Sea": ItemData(2000350064, ItemClassification.progression, HatDLC.dlc1_dw),
-    "Death Wish Contract - Cruisin' for a Bruisin'": ItemData(2000350066, ItemClassification.progression, HatDLC.dlc1_dw),
+    "Death Wish Contract - Rift Collapse: Deep Sea": ItemData(2000350064, ItemClassification.progression, HatDLC.death_wish),
+    "Death Wish Contract - Cruisin' for a Bruisin'": ItemData(2000350066, ItemClassification.progression, HatDLC.death_wish),
     "Death Wish Contract - Community Rift: Rhythm Jump Studio": ItemData(2000350068, ItemClassification.progression, HatDLC.death_wish),
     "Death Wish Contract - Community Rift: Twilight Travels": ItemData(2000350070, ItemClassification.progression, HatDLC.death_wish),
     "Death Wish Contract - Community Rift: The Mountain Rift": ItemData(2000350072, ItemClassification.progression, HatDLC.death_wish),
