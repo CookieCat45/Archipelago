@@ -863,13 +863,13 @@ def create_region(world: "HatInTimeWorld", name: str) -> Region:
     reg = Region(name, world.player, world.multiworld)
 
     for (key, data) in location_table.items():
-        if world.is_dw_only():
-            break
-
         if data.nyakuza_thug != "":
             continue
 
         if data.region == name:
+            if data.region == "Spaceship" and world.is_dw_only():
+                break
+
             if key in storybook_pages.keys() and not world.options.ShuffleStorybookPages:
                 continue
 

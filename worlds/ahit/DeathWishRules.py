@@ -47,6 +47,7 @@ dw_requirements = {
     "No More Bad Guys": LocData(grab=True),
 
     "Rift Collapse: Deep Sea": LocData(hookshot=True, hit_type=HitType.punchable),
+    "Cruisin' for a Bruisin'": LocData(grab=True),
     "Seal the Deal": LocData(grab=True),
 }
 
@@ -68,6 +69,7 @@ dw_bonus_requirements = {
                               hit_type=HitType.stompable_enemy),
     "Wound-Up Windmill": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
     "The Illness has Speedrun": LocData(required_hats=[HatType.SPRINT]),
+    "Community Rift: The Mountain Rift": LocData(hit_type=HitType.stompable_enemy),
 
     "The Mustache Gauntlet": LocData(required_hats=[HatType.ICE]),
 
@@ -242,9 +244,16 @@ def set_dw_rules(world: "HatInTimeWorld"):
                 start_unlock = f"Death Wish Contract - {dw_list[world.random.randint(0, len(dw_list)-1)]}"
             world.multiworld.push_precollected(world.create_item(start_unlock))
             world.start_dw_unlock = start_unlock
+
     if world.options.EndGoal == EndGoal.option_seal_the_deal:
-        world.multiworld.completion_condition[world.player] = lambda state: \
-            state.has("1 Stamp - Seal the Deal", world.player)
+        world.multiworld.completion_condition[world.player] = lambda state: state.has("1 Stamp - Seal the Deal", world.player)
+    elif world.options.EndGoal == EndGoal.option_all_stamps:
+        total_stamps = 111
+        if world.options.DWShuffle:
+            total_stamps = 3 * len(world.dw_shuffle)
+        elif world.options.EnableDLC2:
+            total_stamps += 3
+        world.multiworld.completion_condition[world.player] = lambda state: state.has("Stamps", world.player, total_stamps)
 
 
 def add_dw_rules(world: "HatInTimeWorld", loc: Location):
@@ -391,6 +400,17 @@ def modify_dw_rules(world: "HatInTimeWorld", name: str):
             else:
                 add_rule(main_objective, lambda state: state.has("Homing Attack", world.player))
             add_rule(full_clear, lambda state: state.has("Homing Attack", world.player))
+
+    elif name == "Cruisin' for a Bruisin'":
+        if world.options.Tasksanity:
+            for i in range(world.options.TasksanityCheckCount):
+                location = world.multiworld.get_location(f"Cruisin' for a Bruisin': Tasksanity Check {i + 1}", world.player)
+                add_rule(location, lambda state: can_grab_objects(state, world))
+
+    elif name == "Rift Collapse: Deep Sea":
+        if world.options.LogicDifficulty >= Difficulty.MODERATE:
+            set_rule(world.multiworld.get_location("Rift Collapse: Deep Sea - Rift Pon: 3rd Floor Dweller Tower Roof", world.player),
+                     lambda state: can_use_hookshot(state, world))
 
     elif name == "Seal the Deal":
         if world.options.LockHomingAttack:

@@ -6,17 +6,22 @@ if TYPE_CHECKING:
     from . import HatInTimeWorld
 
 TASKSANITY_START_ID = 2000300204
+DW_REWARD_ID_OFFSET = 452375
 
 
 def get_total_locations(world: "HatInTimeWorld") -> int:
     total = 0
 
-    if not world.is_dw_only():
-        for name in location_table.keys():
-            if is_location_valid(world, name):
-                total += 1
+    for name in location_table.keys():
+        if is_location_valid(world, name):
+             total += 1
 
-        if world.is_dlc1() and world.options.Tasksanity:
+    if world.options.Tasksanity and not world.is_dw_only():
+        if world.is_dlc1():
+            total += world.options.TasksanityCheckCount
+
+    if world.is_dw() and world.options.Tasksanity:
+        if not world.options.DWShuffle or not world.is_dw_excluded("Cruisin' for a Bruisin'"):
             total += world.options.TasksanityCheckCount
 
     if world.is_dw():
@@ -59,6 +64,11 @@ def location_dlc_enabled(world: "HatInTimeWorld", location: str) -> bool:
 
 
 def is_location_valid(world: "HatInTimeWorld", location: str) -> bool:
+    if world.is_dw_only():
+        data = location_table.get(location) or event_locs.get(location)
+        if data.region not in death_wishes.keys():
+            return False
+
     if not location_dlc_enabled(world, location):
         return False
 
@@ -109,14 +119,16 @@ def is_location_valid(world: "HatInTimeWorld", location: str) -> bool:
 def get_location_names() -> Dict[str, int]:
     names = {name: data.id for name, data in location_table.items()}
     id_start: int = TASKSANITY_START_ID
+    id_start_cruisin = TASKSANITY_START_ID + 500
     for i in range(TasksanityCheckCount.range_end):
         names.setdefault(f"Tasksanity Check {i+1}", id_start+i)
+        names.setdefault(f"Cruisin' for a Bruisin': Tasksanity Check {i+1}", id_start_cruisin+i)
 
     for (key, loc_id) in death_wishes.items():
         names.setdefault(f"{key} - Main Objective", loc_id)
         names.setdefault(f"{key} - All Clear", loc_id+1)
         if key in death_wish_rewards:
-            names.setdefault(f"{key} - Item Reward", loc_id+300)
+            names.setdefault(f"{key} - Item Reward", loc_id+DW_REWARD_ID_OFFSET)
 
     return names
 
@@ -610,6 +622,15 @@ storybook_pages = {
     "Rhythm Jump Studio - Page: Behind DJ Station": LocData(2000346361, "Community Rift: Rhythm Jump Studio", dlc_flags=HatDLC.death_wish),
     "Rhythm Jump Studio - Page: Behind Tall Box": LocData(2000346356, "Community Rift: Rhythm Jump Studio", dlc_flags=HatDLC.death_wish),
     "Rhythm Jump Studio - Page: Behind DJ Speaker": LocData(2000346357, "Community Rift: Rhythm Jump Studio", dlc_flags=HatDLC.death_wish),
+
+    "The Mountain Rift - Page: First Floor": LocData(2000345895, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish),
+    "The Mountain Rift - Page: Behind Cat Mountain": LocData(2000345894, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish),
+    "The Mountain Rift - Page: Chimney": LocData(2000345943, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish),
+    "The Mountain Rift - Page: Behind Balloon Rock": LocData(2000345942, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER]),
+    "The Mountain Rift - Page: Birdhouse Top": LocData(2000345893, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER]),
+    "The Mountain Rift - Page: Plant Soil": LocData(2000345941, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER]),
+    "The Mountain Rift - Page: Wooden Platform": LocData(2000345896, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
+    "The Mountain Rift - Page: Arch Top": LocData(2000345901, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
 }
 
 director_tokens = {
@@ -742,6 +763,25 @@ rift_pons_dw = {
     "Rift Collapse: Alpine Skyline - Rift Pon: 4th Floor Waterfall Bottom": LocData(2000352875, "Rift Collapse: Alpine Skyline", dlc_flags=HatDLC.death_wish),
     "Rift Collapse: Alpine Skyline - Rift Pon: 4th Floor Big Bird Nest": LocData(2000352876, "Rift Collapse: Alpine Skyline", dlc_flags=HatDLC.death_wish),
 
+    "Rift Collapse: Deep Sea - Rift Pon: 2nd Floor Dweller Tower": LocData(2000360267, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish),
+    "Rift Collapse: Deep Sea - Rift Pon: 2nd Floor Above Dweller Castle": LocData(2000360309, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER]),
+    "Rift Collapse: Deep Sea - Rift Pon: 2nd Floor Falling Platforms": LocData(2000360311, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish),
+    "Rift Collapse: Deep Sea - Rift Pon: 3rd Floor Ice Platform": LocData(2000361307, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 3rd Floor Above Tower": LocData(2000361265, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 3rd Floor Dweller Tower Roof": LocData(2000361259, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True, required_hats=[HatType.DWELLER]),
+    "Rift Collapse: Deep Sea - Rift Pon: 3rd Floor Above Urchins": LocData(2000361312, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 3rd Floor Above Urchin Tower": LocData(2000361313, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 3rd Floor Tower Seaweed": LocData(2000361308, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 4th Floor Above Shipwreck": LocData(2000362309, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 4th Floor Moving Wood": LocData(2000362310, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 4th Floor Falling Platform": LocData(2000362316, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 4th Floor Front of Castle": LocData(2000362311, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 4th Floor Urchins": LocData(2000362320, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 5th Floor Spinning Towers Cliff": LocData(2000363261, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 5th Floor Starfish": LocData(2000363313, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True),
+    "Rift Collapse: Deep Sea - Rift Pon: 5th Floor Dweller Wall Jump": LocData(2000363262, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True, required_hats=[HatType.DWELLER]),
+    "Rift Collapse: Deep Sea - Rift Pon: 5th Floor Purple Dweller Tower": LocData(2000363308, "Rift Collapse: Deep Sea", dlc_flags=HatDLC.death_wish, hookshot=True, required_hats=[HatType.DWELLER]),
+
     "Twilight Travels - Rift Pon: 2nd Floor Dweller Room Double Wall": LocData(2000352037, "Community Rift: Twilight Travels", dlc_flags=HatDLC.death_wish, hookshot=True,
                                                                           required_hats=[HatType.DWELLER]),
     "Twilight Travels - Rift Pon: 2nd Floor Dweller Room Top": LocData(2000352038, "Community Rift: Twilight Travels", dlc_flags=HatDLC.death_wish, hookshot=True,
@@ -758,7 +798,7 @@ rift_pons_dw = {
                                                                         required_hats=[HatType.DWELLER], hit_type=HitType.stompable_enemy),
     "Twilight Travels - Rift Pon: 3rd Floor Near Ice Platform B": LocData(2000353084, "Community Rift: Twilight Travels", dlc_flags=HatDLC.death_wish, hookshot=True,
                                                                           required_hats=[HatType.DWELLER]),
-    "Twilight Travels - Rift Pon: 4th Floor Dweller Crow": LocData(2000350027, "Community Rift: Twilight Travels", dlc_flags=HatDLC.death_wish, hookshot=True,
+    "Twilight Travels - Rift Pon: 4th Floor Dweller Crow": LocData(2000350127, "Community Rift: Twilight Travels", dlc_flags=HatDLC.death_wish, hookshot=True,
                                                                           required_hats=[HatType.DWELLER], hit_type=HitType.stompable_enemy),
     "Twilight Travels - Rift Pon: 4th Floor Spider": LocData(2000349912, "Community Rift: Twilight Travels", dlc_flags=HatDLC.death_wish, hookshot=True,
                                                                    required_hats=[HatType.DWELLER]),
@@ -784,6 +824,24 @@ rift_pons_dw = {
     "Rhythm Jump Studio - Rift Pon: 5th Floor Rhythm Block Gauntlet": LocData(2000355214, "Community Rift: Rhythm Jump Studio", dlc_flags=HatDLC.death_wish),
     "Rhythm Jump Studio - Rift Pon: 5th Floor Near Ice Platform": LocData(2000355220, "Community Rift: Rhythm Jump Studio", dlc_flags=HatDLC.death_wish, required_hats=[HatType.ICE]),
     "Rhythm Jump Studio - Rift Pon: 5th Floor Disco Floor": LocData(2000355219, "Community Rift: Rhythm Jump Studio", dlc_flags=HatDLC.death_wish),
+
+    "The Mountain Rift - Rift Pon: 2nd Floor Cat Mountain Top": LocData(2000351701, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish),
+    "The Mountain Rift - Rift Pon: 2nd Floor Above Tree": LocData(2000351702, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish),
+    "The Mountain Rift - Rift Pon: 2nd Floor Tightrope End": LocData(2000351705, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish),
+    "The Mountain Rift - Rift Pon: 2nd Floor Floating Pillar": LocData(2000351703, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER]),
+    "The Mountain Rift - Rift Pon: 2nd Floor Dweller Crows": LocData(2000351704, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER],
+                                                                     hit_type=HitType.stompable_enemy),
+    "The Mountain Rift - Rift Pon: 3rd Floor Balloon Rock": LocData(2000352706, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER]),
+    "The Mountain Rift - Rift Pon: 3rd Floor Dweller Crow": LocData(2000349697, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER],
+                                                                    hit_type=HitType.stompable_enemy),
+    "The Mountain Rift - Rift Pon: 3rd Floor Birdhouse": LocData(2000352707, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
+    "The Mountain Rift - Rift Pon: 3rd Floor Hay Bales": LocData(2000352758, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
+    "The Mountain Rift - Rift Pon: 4th Floor Dweller Walljumps": LocData(2000353759, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
+    "The Mountain Rift - Rift Pon: 4th Floor Floating Pillar A": LocData(2000353753, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
+    "The Mountain Rift - Rift Pon: 4th Floor Floating Pillar B": LocData(2000353758, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
+    "The Mountain Rift - Rift Pon: 4th Floor Black Pedestal": LocData(2000353762, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
+    "The Mountain Rift - Rift Pon: 4th Floor Floating Pillar C": LocData(2000353754, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
+    "The Mountain Rift - Rift Pon: 4th Floor Purple Dweller Block": LocData(2000353790, "Community Rift: The Mountain Rift", dlc_flags=HatDLC.death_wish, required_hats=[HatType.DWELLER], hookshot=True),
 }
 
 rift_pons = {
@@ -857,7 +915,7 @@ rift_pons = {
     "Alpine Skyline (Rift) - Rift Pon: 4th Floor Birdhouse Wall Hole": LocData(2000347873, "Time Rift - Alpine Skyline"),
     "Alpine Skyline (Rift) - Rift Pon: 4th Floor Top of Gears": LocData(2000347874, "Time Rift - Alpine Skyline"),
     "Deep Sea - Rift Pon: 2nd Floor Dweller Tower": LocData(2000355258, "Time Rift - Deep Sea"),
-    "Deep Sea - Rift Pon: 2nd Floor Dweller Platform": LocData(2000355314, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1, required_hats=[HatType.DWELLER]),
+    "Deep Sea - Rift Pon: 2nd Floor Above Dweller Castle": LocData(2000355314, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1, required_hats=[HatType.DWELLER]),
     "Deep Sea - Rift Pon: 3rd Floor Falling Platforms": LocData(2000355260, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1),
     "Deep Sea - Rift Pon: 3rd Floor Ice Platform": LocData(2000356307, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1, hookshot=True),
     "Deep Sea - Rift Pon: 3rd Floor Dweller Tower Roof": LocData(2000356259, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1, hookshot=True, required_hats=[HatType.DWELLER]),
@@ -873,7 +931,7 @@ rift_pons = {
     "Tour - Rift Pon: 2nd Floor Grass": LocData(2000344847, "Time Rift - Tour", dlc_flags=HatDLC.dlc1),
     "Tour - Rift Pon: 2nd Floor Lighthouse": LocData(2000344849, "Time Rift - Tour", dlc_flags=HatDLC.dlc1),
     "Tour - Rift Pon: 2nd Floor Concrete Bricks": LocData(2000344850, "Time Rift - Tour", dlc_flags=HatDLC.dlc1),
-    "Tour - Rift Pon: 2nd Floor Brewing Crate": LocData(2000344904, "Time Rift - Tour", dlc_flags=HatDLC.dlc1, required_hats=[HatType.BREWING]),
+    "Tour - Rift Pon: 2nd Floor Brewing Crate": LocData(2000344906, "Time Rift - Tour", dlc_flags=HatDLC.dlc1, required_hats=[HatType.BREWING]), # TODO: ID needs fixing
     "Tour - Rift Pon: 3rd Floor Fragile Box": LocData(2000344854, "Time Rift - Tour", dlc_flags=HatDLC.dlc1),
     "Tour - Rift Pon: 3rd Floor Train Cart Top": LocData(2000344851, "Time Rift - Tour", dlc_flags=HatDLC.dlc1),
     "Tour - Rift Pon: 3rd Floor Water Tower": LocData(2000344855, "Time Rift - Tour", dlc_flags=HatDLC.dlc1),

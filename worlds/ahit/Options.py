@@ -61,24 +61,25 @@ def adjust_options(world: "HatInTimeWorld"):
     if world.options.EndGoal == EndGoal.option_rush_hour and not world.options.EnableDLC2:
         world.options.EndGoal.value = EndGoal.option_finale
 
-    # Don't allow Seal the Deal goal if Death Wish content is disabled
-    if world.options.EndGoal == EndGoal.option_seal_the_deal and not world.is_dw():
+    # Don't allow these goals if Death Wish content is disabled
+    if (world.options.EndGoal == EndGoal.option_seal_the_deal or world.options.EndGoal == EndGoal.option_all_stamps) and not world.is_dw():
         world.options.EndGoal.value = EndGoal.option_finale
 
     if world.options.DWEnableBonus:
         world.options.DWAutoCompleteBonuses.value = 0
 
     if world.is_dw_only():
-        world.options.EndGoal.value = EndGoal.option_seal_the_deal
+        if world.options.EndGoal != EndGoal.option_seal_the_deal and world.options.EndGoal != EndGoal.option_all_stamps:
+            world.options.EndGoal.value = EndGoal.option_seal_the_deal
+
         world.options.ActRandomizer.value = 0
         world.options.ShuffleAlpineZiplines.value = 0
-        world.options.ShuffleDirectorTokens.value = 0
         world.options.ShuffleSubconPaintings.value = 0
-        #world.options.ShuffleStorybookPages.value = 0
         world.options.ShuffleActContracts.value = 0
         world.options.EnableDLC1.value = 0
-        #world.options.LogicDifficulty.value = LogicDifficulty.option_normal
         world.options.DWTimePieceRequirement.value = 0
+        world.options.LockHomingAttack.value = 0
+        world.options.LockObjectGrab.value = 0
 
 
 def get_total_time_pieces(world: "HatInTimeWorld") -> int:
@@ -101,11 +102,14 @@ class EndGoal(Choice):
     Requires DLC2 content to be enabled.
 
     Seal the Deal: Reach and complete the Seal the Deal death wish main objective.
-    Requires Death Wish content to be enabled."""
+    Requires Death Wish content to be enabled.
+
+    All Stamps: Collect all available stamps on the Death Wish map."""
     display_name = "End Goal"
     option_finale = 1
     option_rush_hour = 2
     option_seal_the_deal = 3
+    option_all_stamps = 4
     default = 1
 
 
@@ -427,7 +431,8 @@ class EnableDLC1(Toggle):
 
 
 class Tasksanity(Toggle):
-    """If enabled, Ship Shape tasks will become checks. Requires DLC1 content to be enabled."""
+    """If enabled, Ship Shape tasks will become checks. Requires DLC1 content to be enabled.
+    If the Cruisin' for a Bruisin' Death Wish is available, unique Tasksanity checks will be added to it as well."""
     display_name = "Tasksanity"
 
 
@@ -443,7 +448,7 @@ class TasksanityCheckCount(Range):
     """How many Tasksanity checks there will be in total."""
     display_name = "Tasksanity Check Count"
     range_start = 1
-    range_end = 30
+    range_end = 40
     default = 18
 
 
@@ -533,7 +538,7 @@ class DeathWishOnly(Toggle):
     - All chapters and their levels are unlocked, act shuffle is forced off
     - Any checks other than those in Death Wish contracts are completely removed
     - All Pons in the item pool are replaced with Health Pons or random cosmetics
-    - The EndGoal option is forced to Seal the Deal
+    - The EndGoal option is forced to Seal the Deal if it is not already a Death Wish specific goal
 
     WARNING: Due to the fact that most Death Wish contracts only have a small number of locations, you may run into errors when attempting
     to generate solo seeds with some option combinations. Turning on bonus checks or un-excluding contracts may be required in that case."""

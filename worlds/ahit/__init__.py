@@ -1,3 +1,4 @@
+import worlds.ahit.Options
 from BaseClasses import Item, ItemClassification, Tutorial, Location, MultiWorld
 from .Items import item_table, create_item, relic_groups, act_contracts, create_itempool, get_shop_trap_name, \
     calculate_yarn_costs, alps_hooks, junk_weights
@@ -366,3 +367,11 @@ class HatInTimeWorld(World):
             return True
 
         return f"{name} - All Clear" in self.options.exclude_locations
+
+    def get_total_dw_stamps(self):
+        if self.options.DWShuffle:
+            return 3 * len(self.dw_shuffle)
+        elif self.options.EnableDLC2:
+            return 114
+
+        return 111

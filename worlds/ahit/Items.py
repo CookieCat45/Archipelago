@@ -53,8 +53,12 @@ def create_itempool(world: "HatInTimeWorld") -> List[Item]:
                     continue
                 if world.options.DWShuffle and world.options.LockDeathWishes != LockDeathWishes.option_open_shuffle:
                     continue
+
                 dw_name = name.replace("Death Wish Contract - ", "")
                 if world.is_dw_excluded(dw_name):
+                    if not world.options.DWShuffle:
+                        # Start with excluded DWs in the vanilla map so they just instantly unlock, since they'll exist still
+                        world.multiworld.push_precollected(world.create_item(name))
                     continue
         elif name in dw_unlocks:
             continue
@@ -130,11 +134,11 @@ def item_dlc_enabled(world: "HatInTimeWorld", name: str) -> bool:
 
     if data.dlc_flags == HatDLC.none:
         return True
-    elif data.dlc_flags == HatDLC.dlc1 and world.is_dlc1():
+    elif data.dlc_flags & HatDLC.dlc1 and world.is_dlc1():
         return True
-    elif data.dlc_flags == HatDLC.dlc2 and world.is_dlc2():
+    elif data.dlc_flags & HatDLC.dlc2 and world.is_dlc2():
         return True
-    elif data.dlc_flags == HatDLC.death_wish and world.is_dw():
+    elif data.dlc_flags & HatDLC.death_wish and world.is_dw():
         return True
 
     return False

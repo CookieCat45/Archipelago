@@ -847,7 +847,7 @@ def set_dlc1_rules(world: "HatInTimeWorld"):
 
     if world.options.ShuffleRiftPons:
         if world.options.LogicDifficulty >= Difficulty.NORMAL:
-            add_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 2nd Floor Dweller Platform", world.player),
+            add_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 2nd Floor Above Dweller Castle", world.player),
                     lambda state: state.has("Item Magnet Badge", world.player), "or")
 
     if not world.options.ExcludeTour and world.options.LockObjectGrab:

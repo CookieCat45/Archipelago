@@ -3,7 +3,7 @@ from .Regions import create_region
 from BaseClasses import Region, LocationProgressType, ItemClassification, Location
 from worlds.generic.Rules import add_rule
 from typing import List, TYPE_CHECKING
-from .Locations import death_wishes, death_wish_rewards, location_table
+from .Locations import death_wishes, death_wish_rewards, location_table, DW_REWARD_ID_OFFSET, TASKSANITY_START_ID
 from .Options import EndGoal, LockDeathWishes
 
 if TYPE_CHECKING:
@@ -154,6 +154,7 @@ def create_dw_regions(world: "HatInTimeWorld"):
     if not world.options.DWEnableBonus and world.options.DWAutoCompleteBonuses:
         for name in death_wishes:
             world.excluded_bonuses.append(name)
+
     if world.options.DWExcludeAnnoyingBonuses and not world.options.DWAutoCompleteBonuses:
         for name in annoying_bonuses:
             world.excluded_bonuses.append(name)
@@ -224,7 +225,7 @@ def create_dw_locations(world: "HatInTimeWorld", dw: Region):
     main_objective = HatInTimeLocation(world.player, f"{dw.name} - Main Objective", loc_id, dw)
     reward = None
     if dw.name in death_wish_rewards:
-        reward = HatInTimeLocation(world.player, f"{dw.name} - Item Reward", loc_id+300, dw)
+        reward = HatInTimeLocation(world.player, f"{dw.name} - Item Reward", loc_id+DW_REWARD_ID_OFFSET, dw)
     full_clear = HatInTimeLocation(world.player, f"{dw.name} - All Clear", loc_id + 1, dw)
     main_stamp = HatInTimeLocation(world.player, f"Main Stamp - {dw.name}", None, dw)
     bonus_stamps = HatInTimeLocation(world.player, f"Bonus Stamps - {dw.name}", None, dw)
@@ -236,6 +237,14 @@ def create_dw_locations(world: "HatInTimeWorld", dw: Region):
                                                ItemClassification.progression, None, world.player))
     bonus_stamps.place_locked_item(HatInTimeItem(f"2 Stamp - {dw.name}",
                                                  ItemClassification.progression, None, world.player))
+
+    if world.options.Tasksanity and dw.name == "Cruisin' for a Bruisin'":
+        id_start_cruisin = TASKSANITY_START_ID + 500
+        for i in range(world.options.TasksanityCheckCount):
+            location = HatInTimeLocation(world.player, f"Cruisin' for a Bruisin': Tasksanity Check {i + 1}", id_start_cruisin + i, dw)
+            if dw.name in world.excluded_dws:
+                location.progress_type = LocationProgressType.EXCLUDED
+            dw.locations.append(location)
 
     if dw.name in world.excluded_dws:
         main_objective.progress_type = LocationProgressType.EXCLUDED
