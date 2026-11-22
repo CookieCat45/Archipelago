@@ -221,7 +221,7 @@ class CompassBadgeMode(Choice):
     default = 1
 
 
-class UmbrellaLogic(Toggle):
+class UmbrellaLogic(DefaultOnToggle):
     """Makes Hat Kid's default punch attack do absolutely nothing, making the Umbrella much more relevant and useful"""
     display_name = "Umbrella Logic"
 
@@ -548,8 +548,7 @@ class DeathWishOnly(Toggle):
 class DWShuffle(Toggle):
     """An alternative mode for Death Wish where each contract is unlocked one by one, in a random order.
     Stamp requirements to unlock contracts is removed. Any excluded contracts will not be shuffled into the sequence.
-    If Seal the Deal is the end goal, it will always be the last Death Wish in the sequence.
-    Disabling candles is highly recommended."""
+    If Seal the Deal is the end goal, it will always be the last Death Wish in the sequence."""
     display_name = "Death Wish Shuffle"
 
 
