@@ -5,7 +5,7 @@ from .Locations import location_table, zipline_unlocks, is_location_valid, shop_
 from .Types import HatType, ChapterIndex, hat_type_to_item, Difficulty, HitType, HatInTimeLocation
 from BaseClasses import Location, Entrance, Region
 from typing import TYPE_CHECKING, List, Callable, Union, Dict
-from .Options import EndGoal, CTRLogic, NoTicketSkips
+from .Options import EndGoal, CTRLogic, NoTicketSkips, ShuffleRiftPons
 
 if TYPE_CHECKING:
     from . import HatInTimeWorld
@@ -289,10 +289,13 @@ def set_rules(world: "HatInTimeWorld"):
 
     # Putting all of this here, so it doesn't get overridden by anything
     # Illness starts the player past the intro
-    alpine_entrance = world.multiworld.get_entrance("AFR -> Alpine Skyline Area", world.player)
-    add_rule(alpine_entrance, lambda state: can_use_hookshot(state, world))
-    if world.options.UmbrellaLogic:
-        add_rule(alpine_entrance, lambda state: state.has("Umbrella", world.player))
+    if not world.options.SkipAlpineIntro:
+        alpine_entrance = world.multiworld.get_entrance("AFR -> Alpine Skyline Area", world.player)
+        add_rule(alpine_entrance, lambda state: can_use_hookshot(state, world))
+        if world.options.UmbrellaLogic:
+            add_rule(alpine_entrance, lambda state: state.has("Umbrella", world.player))
+    else:
+        print("TEST")
 
     if zipline_logic(world):
         add_rule(world.multiworld.get_entrance("-> The Birdhouse", world.player),
@@ -488,7 +491,7 @@ def set_moderate_rules(world: "HatInTimeWorld"):
         set_rule(world.multiworld.get_location("Act Completion (Time Rift - Deep Sea)", world.player),
                  lambda state: can_use_hookshot(state, world) and can_use_hat(state, world, HatType.DWELLER))
 
-        if world.options.ShuffleRiftPons:
+        if world.options.ShuffleRiftPons and world.options.ShuffleRiftPons != ShuffleRiftPons.option_dw_only:
             set_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 3rd Floor Dweller Tower Roof", world.player),
                      lambda state: can_use_hookshot(state, world))
 
@@ -557,7 +560,7 @@ def set_hard_rules(world: "HatInTimeWorld"):
         set_rule(world.multiworld.get_location("Act Completion (Time Rift - Deep Sea)", world.player),
                  lambda state: can_use_hookshot(state, world))
 
-        if world.options.ShuffleRiftPons:
+        if world.options.ShuffleRiftPons and world.options.ShuffleRiftPons != ShuffleRiftPons.option_dw_only:
             set_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 5th Floor Dweller Wall Jump", world.player),
                      lambda state: can_use_hookshot(state, world))
             set_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 5th Floor Purple Dweller Tower", world.player),
@@ -845,7 +848,7 @@ def set_dlc1_rules(world: "HatInTimeWorld"):
             location = world.multiworld.get_location(f"Tasksanity Check {i + 1}", world.player)
             add_rule(location, lambda state: can_grab_objects(state, world))
 
-    if world.options.ShuffleRiftPons:
+    if world.options.ShuffleRiftPons and world.options.ShuffleRiftPons != ShuffleRiftPons.option_dw_only:
         if world.options.LogicDifficulty >= Difficulty.NORMAL:
             add_rule(world.multiworld.get_location("Deep Sea - Rift Pon: 2nd Floor Above Dweller Castle", world.player),
                     lambda state: state.has("Item Magnet Badge", world.player), "or")
@@ -861,7 +864,7 @@ def set_dlc1_rules(world: "HatInTimeWorld"):
         if world.options.ShuffleStorybookPages:
             add_rule(world.multiworld.get_location("Tour - Page: The Finale - Near Entrance", world.player), rule)
 
-        if world.options.ShuffleRiftPons:
+        if world.options.ShuffleRiftPons and world.options.ShuffleRiftPons != ShuffleRiftPons.option_dw_only:
             add_rule(world.multiworld.get_location("Tour - Rift Pon: 6th Floor Near Entrance", world.player), rule)
             add_rule(world.multiworld.get_location("Tour - Rift Pon: 6th Floor Above Flamethrower", world.player), rule)
             add_rule(world.multiworld.get_location("Tour - Rift Pon: 6th Floor Stone Platform Top", world.player), rule)

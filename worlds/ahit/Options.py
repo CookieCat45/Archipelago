@@ -2,7 +2,7 @@ from typing import List, TYPE_CHECKING, Dict, Any
 from schema import Schema, Optional
 from dataclasses import dataclass
 from worlds.AutoWorld import PerGameCommonOptions
-from Options import Range, Toggle, DeathLink, Choice, OptionDict, DefaultOnToggle, OptionGroup, StartInventoryPool
+from Options import Range, Toggle, DeathLink, Choice, OptionDict, DefaultOnToggle, OptionGroup, StartInventoryPool, OptionList
 
 if TYPE_CHECKING:
     from . import HatInTimeWorld
@@ -246,11 +246,13 @@ class ShuffleStorybookPages(DefaultOnToggle):
 class ShuffleRiftPons(Choice):
     """If enabled, each Rift Pon in the purple Time Rifts is an item check.
     The Compass Badge can track these down for you.
-    true_dw additionally shuffles Rift Pons found in Death Wish Rift Collapses and Community Rifts."""
+    true_dw additionally shuffles Rift Pons found in Death Wish Rift Collapses and Community Rifts.
+    Alternatively, dw_only will add Rift Pon checks to Death Wishes exclusively."""
     display_name = "Shuffle Rift Pons"
     option_false = 0
     option_true = 1
     option_true_dw = 2
+    option_dw_only = 3
     default = 0
 
 
@@ -270,6 +272,12 @@ class ShuffleActContracts(DefaultOnToggle):
 class ShuffleAlpineZiplines(Toggle):
     """If enabled, Alpine's zipline paths leading to the peaks will be locked behind items."""
     display_name = "Shuffle Alpine Ziplines"
+
+
+class SkipAlpineIntro(Toggle):
+    """If enabled, causes the Alpine Skyline Free Roam intro section to be skipped.
+    This effectively removes the Umbrella requirement."""
+    display_name = "Skip Alpine Intro"
 
 
 class ShuffleSubconPaintings(Toggle):
@@ -638,6 +646,18 @@ class DWExcludeAnnoyingBonuses(DefaultOnToggle):
     display_name = "Exclude Annoying Death Wish Full Completions"
 
 
+class GuaranteedDeathWishes(OptionList):
+    """List of Death Wishes that are guaranteed to appear (if there is space for them).
+    This will also cause the Death Wish to ignore exclusion. However, bonus exclusions are NOT ignored.
+    If you want to change that, see DeathWishBonusExceptions"""
+    default = ()
+
+
+class DeathWishBonusExceptions(OptionList):
+    """List of Death Wishes that will never have their bonuses excluded."""
+    default = ()
+
+
 class DWExcludeCandles(DefaultOnToggle):
     """If enabled, exclude all candle Death Wishes."""
     display_name = "Exclude Candle Death Wishes"
@@ -712,6 +732,7 @@ class AHITOptions(PerGameCommonOptions):
     ActPlando:                ActPlando
     ActBlacklist:             ActBlacklist
     ShuffleAlpineZiplines:    ShuffleAlpineZiplines
+    SkipAlpineIntro:          SkipAlpineIntro
     FinaleShuffle:            FinaleShuffle
     LogicDifficulty:          LogicDifficulty
     YarnBalancePercent:       YarnBalancePercent
@@ -750,6 +771,8 @@ class AHITOptions(PerGameCommonOptions):
     DWExcludeAnnoyingBonuses:     DWExcludeAnnoyingBonuses
     DWExcludeCandles:             DWExcludeCandles
     DWTimePieceRequirement:       DWTimePieceRequirement
+    GuaranteedDeathWishes:        GuaranteedDeathWishes
+    DeathWishBonusExceptions:     DeathWishBonusExceptions
 
     EnableDLC2:               EnableDLC2
     BaseballBat:              BaseballBat
@@ -792,7 +815,7 @@ class AHITOptions(PerGameCommonOptions):
 
 ahit_option_groups: Dict[str, List[Any]] = {
     "General Options": [EndGoal, ShuffleStorybookPages, ShuffleRiftPons, ShuffleDirectorTokens,
-                        ShuffleAlpineZiplines, ShuffleSubconPaintings,
+                        ShuffleAlpineZiplines, SkipAlpineIntro, ShuffleSubconPaintings,
                         ShuffleActContracts, MinPonCost, MaxPonCost, BadgeSellerMinItems, BadgeSellerMaxItems,
                         LogicDifficulty, NoPaintingSkips, CTRLogic, DeadBirdWinner],
 
@@ -812,7 +835,7 @@ ahit_option_groups: Dict[str, List[Any]] = {
 
     "Death Wish Options": [EnableDeathWish, DWTimePieceRequirement, DWShuffle, DWShuffleCountMin, DWShuffleCountMax,
                            LockDeathWishes, DWEnableBonus, DWAutoCompleteBonuses, DWExcludeAnnoyingContracts,
-                           DWExcludeAnnoyingBonuses, DWExcludeCandles, DeathWishOnly],
+                           DWExcludeAnnoyingBonuses, DWExcludeCandles, DeathWishOnly, GuaranteedDeathWishes, DeathWishBonusExceptions],
 
     "Trap Options": [TrapChance, BabyTrapWeight, LaserTrapWeight, ParadeTrapWeight]
 }
@@ -822,6 +845,7 @@ slot_data_options: List[str] = [
     "EndGoal",
     "ActRandomizer",
     "ShuffleAlpineZiplines",
+    "SkipAlpineIntro",
     "LogicDifficulty",
     "CTRLogic",
     "DeadBirdWinner",

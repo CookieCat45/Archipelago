@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from .Types import HatInTimeLocation, HatInTimeItem
 from .Regions import create_region
 from BaseClasses import Region, LocationProgressType, ItemClassification, Location
@@ -147,21 +149,31 @@ dw_classes = {
 
 
 def create_dw_regions(world: "HatInTimeWorld"):
+    for name in world.options.GuaranteedDeathWishes.value + world.options.DeathWishBonusExceptions.value:
+        if name not in death_wishes.keys():
+            raise Exception(f"Invalid Death Wish in option list for {world.multiworld.get_player_name(world.player)}: {name}")
+
     if world.options.DWExcludeAnnoyingContracts:
         for name in annoying_dws:
+            if name in world.options.GuaranteedDeathWishes.value:
+                continue
             world.excluded_dws.append(name)
 
     if not world.options.DWEnableBonus and world.options.DWAutoCompleteBonuses:
         for name in death_wishes:
+            if name in world.options.DeathWishBonusExceptions.value:
+                continue
             world.excluded_bonuses.append(name)
 
     if world.options.DWExcludeAnnoyingBonuses and not world.options.DWAutoCompleteBonuses:
         for name in annoying_bonuses:
+            if name in world.options.DeathWishBonusExceptions.value:
+                continue
             world.excluded_bonuses.append(name)
 
     if world.options.DWExcludeCandles:
         for name in dw_candles:
-            if name not in world.excluded_dws:
+            if name not in world.excluded_dws and name not in world.options.GuaranteedDeathWishes.value:
                 world.excluded_dws.append(name)
 
     spaceship = world.multiworld.get_region("Spaceship", world.player)
@@ -174,7 +186,10 @@ def create_dw_regions(world: "HatInTimeWorld"):
         dw_list: List[str] = []
         for name in death_wishes.keys():
             # Don't shuffle excluded or invalid Death Wishes
-            if not world.is_dlc2() and name == "Snatcher Coins in Nyakuza Metro" or world.is_dw_excluded(name):
+            if world.is_dw_excluded(name):
+                continue
+
+            if name in world.options.GuaranteedDeathWishes.value:
                 continue
 
             dw_list.append(name)
@@ -182,8 +197,13 @@ def create_dw_regions(world: "HatInTimeWorld"):
         world.random.shuffle(dw_list)
         count = world.random.randint(world.options.DWShuffleCountMin.value, world.options.DWShuffleCountMax.value)
         dw_shuffle: List[str] = []
+        guaranteed = deepcopy(world.options.GuaranteedDeathWishes.value)
+        world.random.shuffle(guaranteed)
         total = min(len(dw_list), count)
         for i in range(total):
+            if len(dw_shuffle) < len(guaranteed):
+                dw_shuffle.append(guaranteed[i])
+                continue
             dw_shuffle.append(dw_list[i])
 
         # Seal the Deal is always last if it's the goal

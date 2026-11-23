@@ -1,6 +1,6 @@
 from .Types import HatDLC, HatType, LocData, Difficulty, HitType
 from typing import Dict, TYPE_CHECKING
-from .Options import TasksanityCheckCount
+from .Options import TasksanityCheckCount, ShuffleRiftPons
 
 if TYPE_CHECKING:
     from . import HatInTimeWorld
@@ -21,7 +21,7 @@ def get_total_locations(world: "HatInTimeWorld") -> int:
             total += world.options.TasksanityCheckCount
 
     if world.is_dw() and world.options.Tasksanity:
-        if not world.options.DWShuffle or not world.is_dw_excluded("Cruisin' for a Bruisin'"):
+        if not world.options.DWShuffle or "Cruisin' for a Bruisin'" in world.dw_shuffle:
             total += world.options.TasksanityCheckCount
 
     if world.is_dw():
@@ -78,7 +78,10 @@ def is_location_valid(world: "HatInTimeWorld", location: str) -> bool:
     if not world.options.ShuffleRiftPons and location in rift_pons.keys():
         return False
 
-    if world.options.ShuffleRiftPons.value != 2 and location in rift_pons_dw.keys():
+    if world.options.ShuffleRiftPons < ShuffleRiftPons.option_true_dw and location in rift_pons_dw.keys():
+        return False
+
+    if world.options.ShuffleRiftPons == ShuffleRiftPons.option_dw_only and location in rift_pons.keys() and location not in rift_pons_dw.keys():
         return False
 
     if not world.options.ShuffleDirectorTokens and location in director_tokens.keys():
@@ -94,11 +97,8 @@ def is_location_valid(world: "HatInTimeWorld", location: str) -> bool:
     if world.options.ExcludeTour and data.region == "Time Rift - Tour":
         return False
 
-    # No need for all those event items if we're not doing candles
+    from .DeathWishRules import hit_list
     if data.dlc_flags & HatDLC.death_wish:
-        if world.options.DWExcludeCandles and location in event_locs.keys():
-            return False
-
         if world.options.DWShuffle and data.region in death_wishes and data.region not in world.dw_shuffle:
             return False
 
@@ -111,6 +111,9 @@ def is_location_valid(world: "HatInTimeWorld", location: str) -> bool:
                 return False
 
             if location in zero_jumps_expert and difficulty < Difficulty.EXPERT:
+                return False
+        elif world.options.DWShuffle and location in hit_list.keys():
+            if "Snatcher's Hit List" not in world.dw_shuffle and "Camera Tourist" not in world.dw_shuffle:
                 return False
 
     return True
@@ -915,9 +918,9 @@ rift_pons = {
     "Alpine Skyline (Rift) - Rift Pon: 4th Floor Sliced Log": LocData(2000347891, "Time Rift - Alpine Skyline"),
     "Alpine Skyline (Rift) - Rift Pon: 4th Floor Birdhouse Wall Hole": LocData(2000347902, "Time Rift - Alpine Skyline"),
     "Alpine Skyline (Rift) - Rift Pon: 4th Floor Top of Gears": LocData(2000347884, "Time Rift - Alpine Skyline"),
-    "Deep Sea - Rift Pon: 2nd Floor Dweller Tower": LocData(2000355258, "Time Rift - Deep Sea"),
+    "Deep Sea - Rift Pon: 2nd Floor Dweller Tower": LocData(2000355258, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1),
     "Deep Sea - Rift Pon: 2nd Floor Above Dweller Castle": LocData(2000355331, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1, required_hats=[HatType.DWELLER]),
-    "Deep Sea - Rift Pon: 3rd Floor Falling Platforms": LocData(2000355262, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1),
+    "Deep Sea - Rift Pon: 2nd Floor Falling Platforms": LocData(2000355262, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1),
     "Deep Sea - Rift Pon: 3rd Floor Ice Platform": LocData(2000356317, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1, hookshot=True),
     "Deep Sea - Rift Pon: 3rd Floor Dweller Tower Roof": LocData(2000356260, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1, hookshot=True, required_hats=[HatType.DWELLER]),
     "Deep Sea - Rift Pon: 3rd Floor Inside Mini Castle": LocData(2000356268, "Time Rift - Deep Sea", dlc_flags=HatDLC.dlc1, hookshot=True),

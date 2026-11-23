@@ -291,6 +291,9 @@ class HatInTimeWorld(World):
         for hat in self.hat_craft_order:
             spoiler_handle.write("Hat Cost: %s: %i\n" % (hat, self.hat_yarn_costs[hat]))
 
+        if len(self.dw_shuffle) > 0:
+            spoiler_handle.write(f"Available Death Wishes: {self.dw_shuffle}\n")
+
     def collect(self, state: "CollectionState", item: "Item") -> bool:
         old_count: int = state.count(item.name, self.player)
         change = super().collect(state, item)
@@ -357,16 +360,19 @@ class HatInTimeWorld(World):
            and f"{name} - Main Objective" not in self.options.exclude_locations:
             return False
 
+        if name == "Snatcher Coins in Nyakuza Metro" and not self.is_dlc2():
+            return True
+
         if name in self.excluded_dws:
             return True
 
-        return f"{name} - Main Objective" in self.options.exclude_locations
+        return f"{name} - Main Objective" in self.options.exclude_locations and name not in self.options.GuaranteedDeathWishes.value
 
     def is_bonus_excluded(self, name: str) -> bool:
         if self.is_dw_excluded(name) or name in self.excluded_bonuses:
             return True
 
-        return f"{name} - All Clear" in self.options.exclude_locations
+        return f"{name} - All Clear" in self.options.exclude_locations and name not in self.options.DeathWishBonusExceptions.value
 
     def get_total_dw_stamps(self):
         if self.options.DWShuffle:

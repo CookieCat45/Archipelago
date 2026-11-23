@@ -55,10 +55,11 @@ def create_itempool(world: "HatInTimeWorld") -> List[Item]:
                     continue
 
                 dw_name = name.replace("Death Wish Contract - ", "")
-                if world.is_dw_excluded(dw_name):
-                    if not world.options.DWShuffle:
-                        # Start with excluded DWs in the vanilla map so they just instantly unlock, since they'll exist still
-                        world.multiworld.push_precollected(world.create_item(name))
+                if not world.options.DWShuffle:
+                    # Start with excluded DWs in the vanilla map so they just instantly unlock, since they'll exist still
+                    world.multiworld.push_precollected(world.create_item(name))
+                    continue
+                elif dw_name not in world.dw_shuffle:
                     continue
         elif name in dw_unlocks:
             continue

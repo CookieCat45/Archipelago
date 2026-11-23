@@ -357,28 +357,24 @@ def modify_dw_rules(world: "HatInTimeWorld", name: str):
         rule = (lambda state: can_use_hat(state, world, HatType.DWELLER) and can_use_hookshot(state, world)
                               and (can_use_hat(state, world, HatType.BREWING) or state.has("Umbrella", world.player) and state.has("Projectile Badge", world.player)))
 
-        if world.options.ShuffleRiftPons == ShuffleRiftPons.option_true_dw:
+        if world.options.ShuffleRiftPons >= ShuffleRiftPons.option_true_dw:
             set_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 4th Floor Last Cliff", world.player), rule)
         if world.options.ShuffleStorybookPages:
             set_rule(world.multiworld.get_location("Twilight Travels - Page: Behind Rift Ball", world.player), rule)
 
         if world.options.LockHomingAttack:
-            if world.options.ShuffleRiftPons == ShuffleRiftPons.option_true_dw:
+            if world.options.ShuffleRiftPons >= ShuffleRiftPons.option_true_dw:
                 add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 4th Floor Spider", world.player),
                          lambda state: state.has("Homing Attack", world.player)
                          or can_use_hat(state, world, HatType.BREWING)
                          or can_use_hat(state, world, HatType.ICE))
 
         if world.options.LogicDifficulty <= Difficulty.NORMAL:
-            if world.options.ShuffleRiftPons == ShuffleRiftPons.option_true_dw:
+            if world.options.ShuffleRiftPons >= ShuffleRiftPons.option_true_dw:
                 add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 2nd Floor Dweller Room Top", world.player),
-                         lambda state: can_use_hat(state, world, HatType.BREWING))
-                add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 2nd Floor Dweller Room Double Wall", world.player),
                          lambda state: can_use_hat(state, world, HatType.BREWING))
 
             if world.options.ShuffleStorybookPages:
-                add_rule(world.multiworld.get_location("Twilight Travels - Page: Double Dweller Wall", world.player),
-                         lambda state: can_use_hat(state, world, HatType.BREWING))
                 add_rule(world.multiworld.get_location("Twilight Travels - Page: Dweller Room Pillar", world.player),
                          lambda state: can_use_hat(state, world, HatType.BREWING))
 
