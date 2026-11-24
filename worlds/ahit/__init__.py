@@ -97,7 +97,7 @@ class HatInTimeWorld(World):
             start_chapter = self.options.StartingChapter
             if start_chapter == ChapterIndex.ALPINE:
                 self.multiworld.push_precollected(self.create_item("Hookshot Badge"))
-                if self.options.UmbrellaLogic:
+                if self.options.UmbrellaLogic and not self.options.SkipAlpineIntro:
                     self.multiworld.push_precollected(self.create_item("Umbrella"))
 
                 if self.options.ShuffleAlpineZiplines:
@@ -216,13 +216,12 @@ class HatInTimeWorld(World):
                 i += 1
 
             i = 0
-            if not self.options.DWAutoCompleteBonuses:
-                for name in self.excluded_bonuses:
-                    if name in self.excluded_dws:
-                        continue
+            for name in self.excluded_bonuses:
+                if name in self.excluded_dws:
+                    continue
 
-                    slot_data[f"excluded_bonus{i}"] = dw_classes[name]
-                    i += 1
+                slot_data[f"excluded_bonus{i}"] = dw_classes[name]
+                i += 1
 
             if self.options.DWShuffle:
                 shuffled_dws = self.dw_shuffle

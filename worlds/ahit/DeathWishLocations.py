@@ -159,13 +159,14 @@ def create_dw_regions(world: "HatInTimeWorld"):
                 continue
             world.excluded_dws.append(name)
 
-    if not world.options.DWEnableBonus and world.options.DWAutoCompleteBonuses:
+    if world.options.DWAutoCompleteBonuses and not world.options.DWEnableBonus:
+        # Auto-complete bonuses, unless the player wants an exception
         for name in death_wishes:
             if name in world.options.DeathWishBonusExceptions.value:
                 continue
             world.excluded_bonuses.append(name)
 
-    if world.options.DWExcludeAnnoyingBonuses and not world.options.DWAutoCompleteBonuses:
+    if world.options.DWExcludeAnnoyingBonuses:
         for name in annoying_bonuses:
             if name in world.options.DeathWishBonusExceptions.value:
                 continue

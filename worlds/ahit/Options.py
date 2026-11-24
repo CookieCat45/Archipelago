@@ -497,7 +497,7 @@ class MetroMaxPonCost(Range):
     display_name = "Metro Shops Maximum Pon Cost"
     range_start = 10
     range_end = 800
-    default = 200
+    default = 125
 
 
 class NyakuzaThugMinShopItems(Range):
@@ -654,7 +654,7 @@ class GuaranteedDeathWishes(OptionList):
 
 
 class DeathWishBonusExceptions(OptionList):
-    """List of Death Wishes that will never have their bonuses excluded."""
+    """List of Death Wishes that will never have their bonuses excluded or auto-completed."""
     default = ()
 
 
@@ -875,7 +875,6 @@ slot_data_options: List[str] = [
     "LockDeathWishes",
     "DeathWishOnly",
     "DWEnableBonus",
-    "DWAutoCompleteBonuses",
     "DWTimePieceRequirement",
 
     "EnableDLC2",

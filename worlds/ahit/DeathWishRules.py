@@ -162,8 +162,7 @@ def set_dw_rules(world: "HatInTimeWorld"):
             add_rule(main_stamp, main_objective.access_rule)
             add_rule(all_clear, main_objective.access_rule)
 
-            # Only set bonus stamp rules to require All Clear if we don't auto complete bonuses
-            if not world.options.DWAutoCompleteBonuses and not world.is_bonus_excluded(all_clear.name):
+            if not world.is_bonus_excluded(all_clear.name):
                 add_rule(bonus_stamps, all_clear.access_rule)
             else:
                 # As soon as the Main Objective is completed, the bonuses auto-complete.
