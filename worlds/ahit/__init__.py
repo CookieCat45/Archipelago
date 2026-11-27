@@ -184,7 +184,7 @@ class HatInTimeWorld(World):
                            "BadgeSellerItemCount": self.badge_seller_count,
                            "SeedNumber": str(self.multiworld.seed),  # For shop prices
                            "SeedName": self.multiworld.seed_name,
-                           "TotalLocations": get_total_locations(self)
+                           "TotalLocations": get_total_locations(self),
                            "PlayerSlot": self.player}
 
         if self.has_yarn():
