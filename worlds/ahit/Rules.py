@@ -634,11 +634,6 @@ def set_expert_rules(world: "HatInTimeWorld"):
              lambda state: True)
 
     # Expert: Cherry Hovering
-    set_rule(world.multiworld.get_location("Subcon Forest - Tall Tree Hookshot Swing", world.player),
-             lambda state: has_paintings(state, world, 3, True))
-    set_rule(world.multiworld.get_location("Subcon Forest - Burning Forest Treehouse", world.player),
-             lambda state: has_paintings(state, world, 2, True))
-
     # Skipping the boss firewall is possible with a Cherry Hover.
     add_rule(world.get_entrance("SF Area -> SF Behind Boss Firewall"),
              lambda state: has_paintings(state, world, 1, True) and can_grab_objects(state, world), "or")
