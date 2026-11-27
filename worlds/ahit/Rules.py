@@ -73,9 +73,9 @@ def get_difficulty(world: "HatInTimeWorld") -> Difficulty:
 
 def has_paintings(state: CollectionState, world: "HatInTimeWorld", count: int, allow_skip: bool = True) -> bool:
     if not painting_logic(world):
-        return True
+        return allow_skip and get_difficulty(world) >= Difficulty.MODERATE and not world.options.NoPaintingSkips or can_grab_objects(state, world)
 
-    if not world.options.NoPaintingSkips and allow_skip:
+    if allow_skip and not world.options.NoPaintingSkips:
         # In Moderate there is a very easy trick to skip all the walls, except for the one guarding the boss arena
         if get_difficulty(world) >= Difficulty.MODERATE:
             return True
@@ -281,6 +281,11 @@ def set_rules(world: "HatInTimeWorld"):
                         or state.has("Homing Attack", world.player)
                         or can_use_hat(state, world, HatType.BREWING)
                         or can_use_hat(state, world, HatType.ICE))
+            elif data.hit_type == HitType.mafia and world.options.LockHomingAttack:
+                add_rule(loc, lambda state: state.has("Homing Attack", world.player)
+                          or can_use_hat(state, world, HatType.BREWING)
+                          or can_use_hat(state, world, HatType.ICE)
+                          or state.has("Umbrella", world.player) and state.has("Projectile Badge", world.player))
 
         for misc in data.misc_required:
             add_rule(loc, lambda state, item=misc: state.has(item, world.player))
@@ -441,7 +446,6 @@ def set_moderate_rules(world: "HatInTimeWorld"):
     # Moderate: Vanessa Manor with nothing
     for loc in world.multiworld.get_region("Queen Vanessa's Manor", world.player).locations:
         set_rule(loc, lambda state: has_paintings(state, world, 1))
-
     set_rule(world.multiworld.get_location("Subcon Forest - Manor Rooftop", world.player),
              lambda state: has_paintings(state, world, 1))
 
@@ -545,7 +549,7 @@ def set_hard_rules(world: "HatInTimeWorld"):
     set_rule(world.multiworld.get_location("Subcon Forest - Long Tree Climb Chest", world.player),
              lambda state: has_paintings(state, world, 2, True))
     set_rule(world.multiworld.get_location("Subcon Forest - Tall Tree Hookshot Swing", world.player),
-             lambda state: has_paintings(state, world, 3, True))
+             lambda state: has_paintings(state, world, 3, True) and can_grab_objects(state, world))
 
     # SDJ
     add_rule(world.multiworld.get_location("Act Completion (Time Rift - Curly Tail Trail)", world.player),
@@ -630,6 +634,11 @@ def set_expert_rules(world: "HatInTimeWorld"):
              lambda state: True)
 
     # Expert: Cherry Hovering
+    set_rule(world.multiworld.get_location("Subcon Forest - Tall Tree Hookshot Swing", world.player),
+             lambda state: has_paintings(state, world, 3, True))
+    set_rule(world.multiworld.get_location("Subcon Forest - Burning Forest Treehouse", world.player),
+             lambda state: has_paintings(state, world, 2, True))
+
     # Skipping the boss firewall is possible with a Cherry Hover.
     add_rule(world.get_entrance("SF Area -> SF Behind Boss Firewall"),
              lambda state: has_paintings(state, world, 1, True) and can_grab_objects(state, world), "or")

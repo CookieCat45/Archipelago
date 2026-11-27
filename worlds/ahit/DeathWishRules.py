@@ -55,15 +55,15 @@ dw_requirements = {
 dw_bonus_requirements = {
     # Some One-Hit Hero requirements need badge pins as well because of Hookshot
     "So You're Back From Outer Space": LocData(required_hats=[HatType.SPRINT], hit_type=HitType.stompable_enemy),
-    "Vault Codes in the Wind": LocData(required_hats=[HatType.SPRINT], hit_type=HitType.stompable_enemy),
+    "Vault Codes in the Wind": LocData(required_hats=[HatType.SPRINT], hit_type=HitType.mafia),
     "Encore! Encore!": LocData(misc_required=["One-Hit Hero Badge"]),
-    "Rift Collapse: Mafia of Cooks": LocData(hit_type=HitType.stompable_enemy),
+    "Rift Collapse: Mafia of Cooks": LocData(hit_type=HitType.mafia),
 
     "10 Seconds until Self-Destruct": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
     "Community Rift: Rhythm Jump Studio": LocData(required_hats=[HatType.ICE]),
 
     "Boss Rush": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"]),
-    "Community Rift: Twilight Travels": LocData(required_hats=[HatType.BREWING]),
+    #"Community Rift: Twilight Travels": LocData(required_hats=[HatType.BREWING]),
 
     "Bird Sanctuary": LocData(misc_required=["One-Hit Hero Badge", "Badge Pin"], required_hats=[HatType.DWELLER],
                               hit_type=HitType.stompable_enemy),
@@ -298,6 +298,12 @@ def add_dw_rules(world: "HatInTimeWorld", loc: Location):
                          or state.has("Homing Attack", world.player)
                          or can_use_hat(state, world, HatType.BREWING)
                          or can_use_hat(state, world, HatType.ICE))
+        elif data.hit_type == HitType.mafia and world.options.LockHomingAttack:
+            add_rule(loc, lambda state: state.has("Homing Attack", world.player)
+                      or can_use_hat(state, world, HatType.BREWING)
+                      or can_use_hat(state, world, HatType.ICE)
+                      or state.has("Umbrella", world.player) and state.has("Projectile Badge", world.player))
+
 
 
 def modify_dw_rules(world: "HatInTimeWorld", name: str):
@@ -350,29 +356,34 @@ def modify_dw_rules(world: "HatInTimeWorld", name: str):
 
     elif name == "Community Rift: Twilight Travels":
         # There is a red dweller that needs to be hit with either Brewing Hat or Projectile Badge, and it can't be stood on top of
-        add_rule(world.multiworld.get_location("Community Rift: Twilight Travels - Main Objective", world.player),
+        add_rule(main_objective,
                  lambda state: can_use_hat(state, world, HatType.BREWING) or state.has("Umbrella", world.player) and state.has("Projectile Badge", world.player))
 
         rule = (lambda state: can_use_hat(state, world, HatType.DWELLER) and can_use_hookshot(state, world)
                               and (can_use_hat(state, world, HatType.BREWING) or state.has("Umbrella", world.player) and state.has("Projectile Badge", world.player)))
-
         if world.options.ShuffleRiftPons >= ShuffleRiftPons.option_true_dw:
             set_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 4th Floor Last Cliff", world.player), rule)
         if world.options.ShuffleStorybookPages:
             set_rule(world.multiworld.get_location("Twilight Travels - Page: Behind Rift Ball", world.player), rule)
 
         if world.options.LockHomingAttack:
+            # We need to be able to kill both of these enemies.
+            # The spider is too high up to hit with umbrella or projectile badge.
+            # The crow can't be hurt with ice hat.
+            add_rule(full_clear, lambda state: state.has("Homing Attack", world.player) or can_use_hat(state, world, HatType.BREWING))
             if world.options.ShuffleRiftPons >= ShuffleRiftPons.option_true_dw:
                 add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 4th Floor Spider", world.player),
                          lambda state: state.has("Homing Attack", world.player)
                          or can_use_hat(state, world, HatType.BREWING)
                          or can_use_hat(state, world, HatType.ICE))
+                add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 4th Floor Pompous Crow", world.player),
+                         lambda state: state.has("Homing Attack", world.player) or state.has("Umbrella", world.player)
+                                       or can_use_hat(state, world, HatType.BREWING))
 
         if world.options.LogicDifficulty <= Difficulty.NORMAL:
             if world.options.ShuffleRiftPons >= ShuffleRiftPons.option_true_dw:
                 add_rule(world.multiworld.get_location("Twilight Travels - Rift Pon: 2nd Floor Dweller Room Top", world.player),
                          lambda state: can_use_hat(state, world, HatType.BREWING))
-
             if world.options.ShuffleStorybookPages:
                 add_rule(world.multiworld.get_location("Twilight Travels - Page: Dweller Room Pillar", world.player),
                          lambda state: can_use_hat(state, world, HatType.BREWING))
@@ -389,11 +400,13 @@ def modify_dw_rules(world: "HatInTimeWorld", name: str):
 
     elif name == "No More Bad Guys":
         if world.options.LockHomingAttack:
-            if difficulty >= Difficulty.EXPERT:
+            if difficulty >= Difficulty.HARD:
                 add_rule(main_objective, lambda state: state.has("Homing Attack", world.player)
                          or can_use_hat(state, world, HatType.BREWING) or state.has("Umbrella", world.player))
             else:
                 add_rule(main_objective, lambda state: state.has("Homing Attack", world.player))
+
+            # I'm pretty sure the bonuses are impossible without homing, but it shouldn't be in logic anyhow
             add_rule(full_clear, lambda state: state.has("Homing Attack", world.player))
 
     elif name == "Cruisin' for a Bruisin'":
@@ -568,8 +581,22 @@ def set_enemy_rules(world: "HatInTimeWorld"):
                              and can_use_hat(state, world, HatType.DWELLER))
 
             elif enemy == "Shock Squid" or enemy == "Ninja Cat":
-                if area == "Time Rift - Deep Sea":
+                if area == "Time Rift - Deep Sea" or area == "Rift Collapse: Deep Sea":
                     add_rule(event, lambda state: can_use_hookshot(state, world))
+
+            elif enemy == "Pompous Crow":
+                if world.options.LockHomingAttack:
+                    # Pompous Crows can't be hurt by Ice Hat, they will just push you off
+                    add_rule(event, lambda state: state.has("Umbrella", world.player)
+                             or state.has("Homing Attack", world.player)
+                             or can_use_hat(state, world, HatType.BREWING))
+            elif enemy == "Mafia Goon":
+                if world.options.LockHomingAttack:
+                    # Mafia need something besides Umbrella to properly kill
+                    add_rule(event, lambda state: state.has("Homing Attack", world.player)
+                             or can_use_hat(state, world, HatType.BREWING)
+                             or can_use_hat(state, world, HatType.ICE)
+                             or state.has("Umbrella", world.player) and state.has("Projectile Badge", world.player))
 
 
 # Enemies for Snatcher's Hit List/Camera Tourist, and where to find them
@@ -587,7 +614,7 @@ hit_list = {
     "Rat":              ["Down with the Mafia!", "Bluefin Tunnel"],
 
     "Shock Squid":      ["Bon Voyage!", "Time Rift - Sleepy Subcon", "Time Rift - Deep Sea",
-                         "Rift Collapse: Sleepy Subcon"],
+                         "Rift Collapse: Sleepy Subcon", "Rift Collapse: Deep Sea"],
 
     "Shromb Egg":       ["The Birdhouse", "Bird Sanctuary"],
 
@@ -597,7 +624,7 @@ hit_list = {
     "Crow":             ["Mafia Town Area", "The Birdhouse", "Time Rift - Tour", "Bird Sanctuary",
                          "Time Rift - Alpine Skyline", "Rift Collapse: Alpine Skyline"],
 
-    "Pompous Crow":     ["The Birdhouse", "Time Rift - The Lab", "Bird Sanctuary", "The Mustache Gauntlet"],
+    "Pompous Crow":     ["The Birdhouse", "Time Rift - The Lab", "Time Rift - Tour", "Bird Sanctuary", "The Mustache Gauntlet"],
 
     "Fiery Crow":       ["The Finale", "The Lava Cake", "The Mustache Gauntlet"],
 
@@ -605,7 +632,7 @@ hit_list = {
 
     "Ninja Cat":        ["The Birdhouse", "The Windmill", "Bluefin Tunnel", "The Mustache Gauntlet",
                          "Time Rift - Curly Tail Trail", "Time Rift - Alpine Skyline", "Time Rift - Deep Sea",
-                         "Rift Collapse: Alpine Skyline"],
+                         "Rift Collapse: Alpine Skyline", "Rift Collapse: Deep Sea"],
 
     # Bosses
     "Mafia Boss":       ["Down with the Mafia!", "Encore! Encore!", "Boss Rush"],

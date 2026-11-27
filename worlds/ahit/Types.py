@@ -26,6 +26,7 @@ class HitType(IntEnum):
     dweller_bell = 3
     punchable = 4
     stompable_enemy = 5
+    mafia = 6
 
 
 class HatDLC(IntFlag):
